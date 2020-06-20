@@ -17,6 +17,7 @@ from backbone import EfficientDetBackbone
 from tensorboardX import SummaryWriter
 import numpy as np
 from tqdm.autonotebook import tqdm
+from efficientdet.model import Regressor, Classifier
 
 from efficientdet.loss import FocalLoss
 from utils.sync_batchnorm import patch_replication_callback
@@ -40,6 +41,8 @@ def get_args():
     parser.add_argument('--head_only', type=boolean_string, default=False,
                         help='whether finetunes only the regressor and the classifier, '
                              'useful in early stage convergence or small/easy dataset')
+    parser.add_argument('-lb','--load_backbone_only', type=boolean_string, default=False,
+                        help='whether load the regressor and the classifier, ')
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
                                                                    'suggest using \'admaw\' until the'
@@ -128,7 +131,10 @@ def train(opt):
 
     model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
                                  ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
-
+    
+    if opt.load_backbone_only:
+        model.reload_cls_reg()
+             
     # load last weights
     if opt.load_weights is not None:
         if opt.load_weights.endswith('.pth'):

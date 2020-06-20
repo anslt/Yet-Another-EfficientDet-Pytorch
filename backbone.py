@@ -53,6 +53,14 @@ class EfficientDetBackbone(nn.Module):
         self.anchors = Anchors(anchor_scale=self.anchor_scale[compound_coef], **kwargs)
 
         self.backbone_net = EfficientNet(self.backbone_compound_coef[compound_coef], load_weights)
+    
+    def reload_cls_reg(self):
+        num_anchors = len(self.aspect_ratios) * self.num_scales
+        self.regressor = Regressor(in_channels=self.fpn_num_filters[self.compound_coef], num_anchors=num_anchors,
+                                   num_layers=self.box_class_repeats[self.compound_coef])
+        self.classifier = Classifier(in_channels=self.fpn_num_filters[self.compound_coef], num_anchors=num_anchors,
+                                     num_classes=self.num_classes,
+                                     num_layers=self.box_class_repeats[self.compound_coef])
 
     def freeze_bn(self):
         for m in self.modules():
