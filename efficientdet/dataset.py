@@ -5,6 +5,7 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from pycocotools.coco import COCO
 import cv2
+from .utils import SegmentationMask
 
 
 class CocoDataset(Dataset):
@@ -40,8 +41,9 @@ class CocoDataset(Dataset):
     def __getitem__(self, idx):
 
         img = self.load_image(idx)
-        annot = self.load_annotations(idx)
-        sample = {'img': img, 'annot': annot}
+        annot, mask = self.load_annotations(idx)
+        masks = SegmentationMask(mask, img.size())
+        sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
         return sample
@@ -58,6 +60,7 @@ class CocoDataset(Dataset):
         # get ground truth annotations
         annotations_ids = self.coco.getAnnIds(imgIds=self.image_ids[image_index], iscrowd=False)
         annotations = np.zeros((0, 5))
+        masks = []
 
         # some images appear to miss annotations
         if len(annotations_ids) == 0:
@@ -76,17 +79,20 @@ class CocoDataset(Dataset):
             annotation[0, 4] = a['category_id'] - 1
             annotations = np.append(annotations, annotation, axis=0)
 
+            masks += a["segmentation"]
+
         # transform from [x, y, w, h] to [x1, y1, x2, y2]
         annotations[:, 2] = annotations[:, 0] + annotations[:, 2]
         annotations[:, 3] = annotations[:, 1] + annotations[:, 3]
 
-        return annotations
+        return annotations, masks
 
 
 def collater(data):
     imgs = [s['img'] for s in data]
     annots = [s['annot'] for s in data]
     scales = [s['scale'] for s in data]
+    masks = [s['mask'] for s in data]
 
     imgs = torch.from_numpy(np.stack(imgs, axis=0))
 
@@ -104,7 +110,7 @@ def collater(data):
 
     imgs = imgs.permute(0, 3, 1, 2)
 
-    return {'img': imgs, 'annot': annot_padded, 'scale': scales}
+    return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": masks}
 
 
 class Resizer(object):
@@ -114,7 +120,7 @@ class Resizer(object):
         self.img_size = img_size
 
     def __call__(self, sample):
-        image, annots = sample['img'], sample['annot']
+        image, annots, masks = sample['img'], sample['annot'], sample["mask"]
         height, width, _ = image.shape
         if height > width:
             scale = self.img_size / height
@@ -168,3 +174,4 @@ class Normalizer(object):
         image, annots = sample['img'], sample['annot']
 
         return {'img': ((image.astype(np.float32) - self.mean) / self.std), 'annot': annots}
+

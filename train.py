@@ -132,8 +132,7 @@ def train(opt):
     model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
                                  ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
     
-    if opt.load_backbone_only:
-        model.reload_cls_reg()
+    
              
     # load last weights
     if opt.load_weights is not None:
@@ -148,6 +147,8 @@ def train(opt):
 
         try:
             ret = model.load_state_dict(torch.load(weights_path), strict=False)
+            if opt.load_backbone_only:
+                model.reload_cls_reg()
         except RuntimeError as e:
             print(f'[Warning] Ignoring {e}')
             print(
