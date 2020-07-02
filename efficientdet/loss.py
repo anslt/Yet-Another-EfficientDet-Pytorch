@@ -53,7 +53,7 @@ class FocalLoss(nn.Module):
 
             classification = torch.clamp(classification, 1e-4, 1.0 - 1e-4)
             
-            print(classfication.size())
+            print(classification.size())
             print(regression.size())
             print(anchor.size())
             
