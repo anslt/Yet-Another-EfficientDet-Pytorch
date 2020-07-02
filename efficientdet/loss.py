@@ -53,6 +53,14 @@ class FocalLoss(nn.Module):
 
             classification = torch.clamp(classification, 1e-4, 1.0 - 1e-4)
             
+            print(classfication.size())
+            print(regression.size())
+            print(anchor.size())
+            
+            print(classfication)
+            print(regression)
+            print(anchor)
+            
             if bbox_annotation.shape[0] == 0:
                 if torch.cuda.is_available():
                     
