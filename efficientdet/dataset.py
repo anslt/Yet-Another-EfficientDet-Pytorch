@@ -42,8 +42,8 @@ class CocoDataset(Dataset):
 
         img = self.load_image(idx)
         annot, mask = self.load_annotations(idx)
-        masks = SegmentationMask(mask, img.size())
-        sample = {'img': img, 'annot': annot, "mask": mask}
+        #masks = SegmentationMask(mask, img.size())
+        sample = {'img': img, 'annot': annot} #, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
         return sample
@@ -79,20 +79,20 @@ class CocoDataset(Dataset):
             annotation[0, 4] = a['category_id'] - 1
             annotations = np.append(annotations, annotation, axis=0)
 
-            masks += a["segmentation"]
+            #masks += a["segmentation"]
 
         # transform from [x, y, w, h] to [x1, y1, x2, y2]
         annotations[:, 2] = annotations[:, 0] + annotations[:, 2]
         annotations[:, 3] = annotations[:, 1] + annotations[:, 3]
 
-        return annotations, masks
+        return annotations #, masks
 
 
 def collater(data):
     imgs = [s['img'] for s in data]
     annots = [s['annot'] for s in data]
     scales = [s['scale'] for s in data]
-    masks = [s['mask'] for s in data]
+    #masks = [s['mask'] for s in data]
 
     imgs = torch.from_numpy(np.stack(imgs, axis=0))
 
@@ -110,7 +110,7 @@ def collater(data):
 
     imgs = imgs.permute(0, 3, 1, 2)
 
-    return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": masks}
+    return {'img': imgs, 'annot': annot_padded, 'scale': scales}#, "mask": masks}
 
 
 class Resizer(object):
