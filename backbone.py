@@ -88,3 +88,10 @@ class EfficientDetBackbone(nn.Module):
             print(ret)
         except RuntimeError as e:
             print('Ignoring ' + str(e) + '"')
+
+
+def build_model(cfg):
+    model = EfficientDetBackbone(num_classes=cfg.RETINANET.NUM_CLASSES - 1,
+                                 compound_coef=cfg.EFFICIENTNET.COEF,
+                                 load_weights=cfg.EFFICIENTNET.LOAD_WEIGHTS)
+    return model
