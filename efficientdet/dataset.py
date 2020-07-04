@@ -9,12 +9,12 @@ from .utils import SegmentationMask
 
 
 class CocoDataset(Dataset):
-    def __init__(self, root_dir, set='train2017', transform=None, resize = 512):
+    def __init__(self, root_dir, set='train2017', transform=None):
 
         self.root_dir = root_dir
         self.set_name = set
         self.transform = transform
-        self.resize = resize
+        #self.resize = resize
 
         self.coco = COCO(os.path.join(self.root_dir, 'annotations', 'instances_' + self.set_name + '.json'))
         self.image_ids = self.coco.getImgIds()
