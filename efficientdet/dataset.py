@@ -9,11 +9,12 @@ from .utils import SegmentationMask
 
 
 class CocoDataset(Dataset):
-    def __init__(self, root_dir, set='train2017', transform=None):
+    def __init__(self, root_dir, set='train2017', transform=None, resize = 512):
 
         self.root_dir = root_dir
         self.set_name = set
         self.transform = transform
+        self.resize = resize
 
         self.coco = COCO(os.path.join(self.root_dir, 'annotations', 'instances_' + self.set_name + '.json'))
         self.image_ids = self.coco.getImgIds()
@@ -42,7 +43,10 @@ class CocoDataset(Dataset):
         
         img = self.load_image(idx)
         annot, mask = self.load_annotations(idx)
-        mask = SegmentationMask(mask, img.shape[:2])
+        if mask == []:
+            mask = SegmentationMask(mask, (self.resize, self.resize))
+        else:
+            mask = SegmentationMask(mask, ())
         sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
@@ -146,6 +150,10 @@ class Resizer(object):
         annots[:, :4] *= scale
         masks = masks.resize((resized_height, resized_width))
         masks = masks.resize_img((self.img_size, self.img_size))
+
+        if masks.size[0] != new_image.shape[0] or masks.size[1] != new_image.shape[1]:
+            print("mask:", masks.size)
+            print("image:", image.shape[:2])
 
         return {'img': torch.from_numpy(new_image).to(torch.float32), 'annot': torch.from_numpy(annots),
                 'mask': masks, 'scale': scale}
