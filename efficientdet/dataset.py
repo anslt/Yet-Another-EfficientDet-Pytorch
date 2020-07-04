@@ -136,6 +136,10 @@ class Resizer(object):
         new_image = np.zeros((self.img_size, self.img_size, 3))
         new_image[0:resized_height, 0:resized_width] = image
 
+        if annots.shape[0] == 0:
+            return {'img': torch.from_numpy(new_image).to(torch.float32), 'annot': torch.from_numpy(annots),
+                'mask': masks, 'scale': scale}
+
         annots[:, :4] *= scale
         masks = masks.resize((resized_height, resized_width))
 
@@ -152,6 +156,11 @@ class Augmenter(object):
             image = image[:, ::-1, :]
 
             rows, cols, channels = image.shape
+
+            if annots.shape[0] == 0:
+                sample = {'img': image, 'annot': annots, 'mask': masks}
+                return sample
+
 
             x1 = annots[:, 0].copy()
             x2 = annots[:, 2].copy()
