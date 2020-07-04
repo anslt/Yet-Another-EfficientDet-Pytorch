@@ -137,7 +137,7 @@ class Resizer(object):
         new_image[0:resized_height, 0:resized_width] = image
 
         annots[:, :4] *= scale
-        masks = masks.Resize((resized_height, resized_width))
+        masks = masks.Resizer((resized_height, resized_width))
 
         return {'img': torch.from_numpy(new_image).to(torch.float32), 'annot': torch.from_numpy(annots),
                 'mask': masks, 'scale': scale}
