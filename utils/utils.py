@@ -363,8 +363,8 @@ def to_bbox_targets(annotations, masks, nums, img_size=512):
         bboxes = annot[:num, :4]
         labels = annot[:num, -1]
 
-        boxlist = BoxList(bboxes.cuda(), (img_size, img_size))
-        boxlist.add_field("labels", labels.type(torch.LongTensor).cuda())
+        boxlist = BoxList(bboxes, (img_size, img_size))
+        boxlist.add_field("labels", labels.type(torch.LongTensor))
         boxlist.add_field("masks", mask)
         targets.append(boxlist)
 
