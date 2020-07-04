@@ -177,7 +177,10 @@ class Polygons(object):
         for poly in self.polygons:
             p = poly.clone()
             TO_REMOVE = 1
-            p[idx::2] = dim - poly[idx::2] - TO_REMOVE
+            try:
+                p[idx::2] = dim - poly[idx::2] - TO_REMOVE
+            except IndexError:
+                print("poly", poly)
             flipped_polygons.append(p)
 
         return Polygons(flipped_polygons, size=self.size, mode=self.mode)
@@ -250,7 +253,6 @@ class SegmentationMask(object):
                 object, and the third level to the polygon coordinates.
         """
         assert isinstance(polygons, list)
-        print("Polygons:", str(len(polygons)))
 
         self.polygons = [Polygons(p, size, mode) for p in polygons]
         self.size = size
