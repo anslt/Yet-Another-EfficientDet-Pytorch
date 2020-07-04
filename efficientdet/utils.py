@@ -150,7 +150,6 @@ class Polygons(object):
 
     def __init__(self, polygons, size, mode):
         # assert isinstance(polygons, list), '{}'.format(polygons)
-        print("Polygons:", str(len(polygons)))
         if isinstance(polygons, list):
             polygons = [torch.as_tensor(p, dtype=torch.float32) for p in polygons]
         elif isinstance(polygons, Polygons):
@@ -251,6 +250,7 @@ class SegmentationMask(object):
                 object, and the third level to the polygon coordinates.
         """
         assert isinstance(polygons, list)
+        print("Polygons:", str(len(polygons)))
 
         self.polygons = [Polygons(p, size, mode) for p in polygons]
         self.size = size
