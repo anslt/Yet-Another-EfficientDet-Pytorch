@@ -14,7 +14,6 @@ class CocoDataset(Dataset):
         self.root_dir = root_dir
         self.set_name = set
         self.transform = transform
-        #self.resize = resize
 
         self.coco = COCO(os.path.join(self.root_dir, 'annotations', 'instances_' + self.set_name + '.json'))
         self.image_ids = self.coco.getImgIds()
@@ -43,10 +42,7 @@ class CocoDataset(Dataset):
         
         img = self.load_image(idx)
         annot, mask = self.load_annotations(idx)
-        if mask == []:
-            mask = SegmentationMask(mask, (self.resize, self.resize))
-        else:
-            mask = SegmentationMask(mask, ())
+        mask = SegmentationMask(mask, img.shape[:2])
         sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
