@@ -221,6 +221,7 @@ def train(opt):
                     annot = data['annot']
                     mask = data['mask']
                     
+                    print("num_gpus")
                     print(params.num_gpus)
                     if params.num_gpus == 1:
                         # if only one gpu, just send it to cuda:0
