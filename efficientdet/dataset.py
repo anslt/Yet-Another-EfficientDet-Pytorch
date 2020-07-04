@@ -64,7 +64,6 @@ class CocoDataset(Dataset):
 
         # some images appear to miss annotations
         if len(annotations_ids) == 0:
-            print(len(annotations))
             return annotations, masks
 
         # parse annotations
@@ -86,7 +85,6 @@ class CocoDataset(Dataset):
         annotations[:, 2] = annotations[:, 0] + annotations[:, 2]
         annotations[:, 3] = annotations[:, 1] + annotations[:, 3]
         
-        print(len(annotations))
         return annotations, masks
 
 
