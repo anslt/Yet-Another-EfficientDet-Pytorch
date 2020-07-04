@@ -46,7 +46,9 @@ class CocoDataset(Dataset):
         sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
+        print(sample["mask"])
         sample["mask"] =  sample["mask"].resize_img(img[:2])
+        print(sample['mask'])
         return sample
 
     def load_image(self, image_index):
