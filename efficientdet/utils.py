@@ -263,6 +263,10 @@ class SegmentationMask(object):
         self.size = size
         self.mode = mode
 
+    def resize_img(self, size):
+        self.size = size
+        return self
+
     def transpose(self, method):
         if method not in (FLIP_LEFT_RIGHT, FLIP_TOP_BOTTOM):
             raise NotImplementedError(

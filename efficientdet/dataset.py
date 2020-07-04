@@ -46,7 +46,7 @@ class CocoDataset(Dataset):
         sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
-        sample["mask"] =  SegmentationMask(sample["mask"].polygons, img[:2])
+        sample["mask"] =  sample["mask"].polygons.resize_img(img[:2])
         return sample
 
     def load_image(self, image_index):
