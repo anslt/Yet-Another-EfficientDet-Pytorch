@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+#logs
+logs/coco/
+
 # datasets
 datasets/
 
@@ -29,6 +32,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+collect_env.py
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
