@@ -42,7 +42,7 @@ class CocoDataset(Dataset):
 
         img = self.load_image(idx)
         annot, mask = self.load_annotations(idx)
-        mask = SegmentationMask(mask, img.size())
+        mask = SegmentationMask(mask, img.shape[:2])
         sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
@@ -64,7 +64,7 @@ class CocoDataset(Dataset):
 
         # some images appear to miss annotations
         if len(annotations_ids) == 0:
-            return annotations
+            return annotations, masks
 
         # parse annotations
         coco_annotations = self.coco.loadAnns(annotations_ids)
