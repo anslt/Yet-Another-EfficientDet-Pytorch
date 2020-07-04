@@ -1,35 +1,38 @@
 import torch
 from torch import nn
 from rpn import build_rpn
-from backbone import build_model
+# from backbone import build_model
 from maskrcnn_benchmark.modeling.roi_heads.mask_head.mask_head import build_roi_mask_head
 from maskrcnn_benchmark.structures.boxlist_ops import cat_boxlist
 from utils.utils import to_bbox_targets
 
 
-class ModelWithMask(nn.Module):
-    def __init__(self, cfg, debug=False):
+class EfficientMask(nn.Module):
+    def __init__(self, cfg, model, debug=False):
         super().__init__()
         self.cfg = cfg.clone()
         self.debug = debug
 
-        self.model = build_model(cfg)
+        self.model = model
         self.rpn = build_rpn(cfg)
         self.mask = None
         if self.cfg.MODEL.MASK_ON:
             self.mask = build_roi_mask_head(cfg)
 
-    def forward(self, imgs, annotations, obj_list=None):
+        self.input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536]
+        self.image_size = self.input_sizes[self.cfg.EFFICIENTNET.COEF]
+
+    def forward(self, imgs, annotations, masks, obj_list=None):
         features, regression, classification, anchors = self.model(imgs)
         (anchors, detections), detector_losses = self.rpn(imgs, annotations, regression, classification,
                                                           anchors, obj_list=obj_list)
-        targets = to_bbox_targets(annotations)
+        targets = to_bbox_targets(annotations, masks, img_size=self.image_size)
 
         if self.training:
             losses = {}
             losses.update(detector_losses)
             if self.mask:
-                if self.mask_on:
+                if self.cfg.MODEL.MASK_ON:
                     # Padding the GT
                     proposals = []
                     for (image_detections, image_targets) in zip(detections, targets):
@@ -64,12 +67,6 @@ class ModelWithMask(nn.Module):
                         image_detections = image_detections[keep]
 
                     proposals.append(image_detections)
-
-                if self.cfg.MODEL.SPARSE_MASK_ON:
-                    x, detections, mask_losses = self.mask(
-                        features, proposals, targets
-                    )
-                else:
                     x, detections, mask_losses = self.mask(features, proposals, targets)
             return detections
 

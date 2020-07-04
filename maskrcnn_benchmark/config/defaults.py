@@ -222,6 +222,17 @@ _C.MODEL.RESNETS.RES5_DILATION = 1
 _C.MODEL.RESNETS.RES2_OUT_CHANNELS = 256
 _C.MODEL.RESNETS.STEM_OUT_CHANNELS = 64
 
+# ---------------------------------------------------------------------------- #
+# EfficientNet Options (Follow the Detectron version)
+# ---------------------------------------------------------------------------- #
+
+_C.EFFICIENTNET = CN()
+_C.EFFICIENTNET.COEF = 0
+_C.EFFICIENTNET.LOAD_WEIGHTS = False
+_C.EFFICIENTNET.LOAD_BACKBONE = False
+_C.EFFICIENTNET.LOAD_DIR = ""
+_C.EFFICIENTNET.FEW_ANCHOR=False
+_C.EFFICIENTNET.GENERATE_ANCHOR=False
 
 # ---------------------------------------------------------------------------- #
 # RetinaNet Options (Follow the Detectron version)
@@ -302,6 +313,8 @@ _C.RETINANET.NUM_MASKS_TEST = 50
 _C.RETINANET.LOW_QUALITY_MATCHES = True
 _C.RETINANET.LOW_QUALITY_THRESHOLD = 0.0
 
+_C.RETINANET.FEW_ANCHOR = False
+
 # ---------------------------------------------------------------------------- #
 # SparseMask Options (Follow the Detectron version)
 # ---------------------------------------------------------------------------- #
@@ -353,6 +366,8 @@ _C.TEST.IMS_PER_BATCH = 8
 
 
 _C.TEST.DETECTIONS_PER_IMG =100
+
+# ---------------------------------------------------------------------------- #
 # Misc options
 # ---------------------------------------------------------------------------- #
 _C.OUTPUT_DIR = "."

@@ -16,6 +16,9 @@ class ModelWithRPN(nn.Module):
         self.nms_thresh = 0.5
         self.fpn_post_nms_top_n = 100
 
+        self.input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536]
+        self.image_size = self.input_sizes[self.cfg.EFFICIENTNET.COEF]
+
     def forward(self, imgs, annotations, regression, classification, anchors, obj_list=None):
         if self.training:
             return self._forward_train(anchors, classification, regression, annotations, imgs, obj_list=obj_list)
@@ -42,9 +45,9 @@ class ModelWithRPN(nn.Module):
                 # )
                 regressBoxes = BBoxTransform()
                 clipBoxes = ClipBoxes()
-                out = postprocess(imgs.tensors, anchors, regression, classification, regressBoxes, clipBoxes,
+                out = postprocess(imgs.detach(), anchors, regression, classification, regressBoxes, clipBoxes,
                                   self.pre_nms_thresh, self.nms_thresh)
-                detections = to_bbox_detections(imgs, out, fpn_post_nms_top_n=self.fpn_post_nms_top_n)
+                detections = to_bbox_detections(out, img_size = self.image_size, fpn_post_nms_top_n=self.fpn_post_nms_top_n)
         return (anchors, detections), losses
 
     def _forward_test(self, anchors, classification, regression, imgs):
@@ -52,9 +55,9 @@ class ModelWithRPN(nn.Module):
         clipBoxes = ClipBoxes()
         #TODO: currently the limit for pre_nms_top_n is not set
         #TODO: retinamask does nms per class(label) but Yet-Anotehr does nms all togehter
-        out = postprocess(imgs.tensors, anchors, regression, classification, regressBoxes, clipBoxes,
+        out = postprocess(imgs.detach(), anchors, regression, classification, regressBoxes, clipBoxes,
                           self.pre_nms_thresh, self.nms_thresh)
-        boxes = to_bbox_detections(imgs, out, fpn_post_nms_top_n=self.fpn_post_nms_top_n)
+        boxes = to_bbox_detections(out, img_size = self.image_size, fpn_post_nms_top_n=self.fpn_post_nms_top_n)
 
         return (anchors, boxes), {}
 

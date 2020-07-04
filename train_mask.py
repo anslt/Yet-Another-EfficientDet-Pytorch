@@ -14,6 +14,8 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from efficientdet.dataset import CocoDataset, Resizer, Normalizer, Augmenter, collater
 from backbone import EfficientDetBackbone
+from mask import EfficientMask
+from maskrcnn_benchmark.config import cfg
 from tensorboardX import SummaryWriter
 import numpy as np
 from tqdm.autonotebook import tqdm
@@ -34,6 +36,7 @@ class Params:
 
 def get_args():
     parser = argparse.ArgumentParser('Yet Another EfficientDet Pytorch: SOTA object detection network - Zylo117')
+    parser.add_argument("-cfg", "--config-file", default="", metavar="FILE", help="path to config file", type=str,)
     parser.add_argument('-p', '--project', type=str, default='coco', help='project file that contains parameters')
     parser.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
     parser.add_argument('-n', '--num_workers', type=int, default=12, help='num_workers of dataloader')
@@ -41,7 +44,7 @@ def get_args():
     parser.add_argument('--head_only', type=boolean_string, default=False,
                         help='whether finetunes only the regressor and the classifier, '
                              'useful in early stage convergence or small/easy dataset')
-    parser.add_argument('-lb','--load_backbone_only', type=boolean_string, default=False,
+    parser.add_argument('-lb', '--load_backbone_only', type=boolean_string, default=False,
                         help='whether load the regressor and the classifier, ')
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
@@ -59,8 +62,9 @@ def get_args():
     parser.add_argument('-w', '--load_weights', type=str, default=None,
                         help='whether to load weights from a checkpoint, set None to initialize, set \'last\' to load last checkpoint')
     parser.add_argument('--saved_path', type=str, default='logs/')
-    parser.add_argument('--debug', type=boolean_string, default=False, help='whether visualize the predicted boxes of training, '
-                                                                  'the output images will be in test/')
+    parser.add_argument('--debug', type=boolean_string, default=False,
+                        help='whether visualize the predicted boxes of training, '
+                             'the output images will be in test/')
 
     args = parser.parse_args()
     return args
@@ -72,25 +76,15 @@ def boolean_string(s):
     return s == 'True'
 
 
-class ModelWithLoss(nn.Module):
-    def __init__(self, model, debug=False):
-        super().__init__()
-        self.criterion = FocalLoss()
-        self.model = model
-        self.debug = debug
-
-    def forward(self, imgs, annotations, obj_list=None):
-        _, regression, classification, anchors = self.model(imgs)
-        if self.debug:
-            cls_loss, reg_loss = self.criterion(classification, regression, anchors, annotations,
-                                                imgs=imgs, obj_list=obj_list)
-        else:
-            cls_loss, reg_loss = self.criterion(classification, regression, anchors, annotations)
-        return cls_loss, reg_loss
-
-
 def train(opt):
+
     params = Params(f'projects/{opt.project}.yml')
+
+    cfg.merge_from_file(opt.config_file)
+    cfg.MODEL.MASK_ON = False
+    cfg.RETINANET.NUM_CLASSES = len(params.obj_list)
+    cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(params.obj_list)
+    cfg.freeze()
 
     if params.num_gpus == 0:
         os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
@@ -131,9 +125,7 @@ def train(opt):
 
     model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
                                  ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
-    
-    
-             
+
     # load last weights
     if opt.load_weights is not None:
         if opt.load_weights.endswith('.pth'):
@@ -188,7 +180,7 @@ def train(opt):
     writer = SummaryWriter(opt.log_path + f'/{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}/')
 
     # warp the model with loss function, to reduce the memory usage on gpu0 and speedup
-    model = ModelWithLoss(model, debug=opt.debug)
+    model = EfficientMask(cfg, model, debug=opt.debug)
 
     if params.num_gpus > 0:
         model = model.cuda()
@@ -227,19 +219,31 @@ def train(opt):
                 try:
                     imgs = data['img']
                     annot = data['annot']
+                    mask = data['mask']
 
                     if params.num_gpus == 1:
                         # if only one gpu, just send it to cuda:0
                         # elif multiple gpus, send it to multiple gpus in CustomDataParallel, not here
                         imgs = imgs.cuda()
                         annot = annot.cuda()
+                        mask = mask.cuda()
 
                     optimizer.zero_grad()
-                    cls_loss, reg_loss = model(imgs, annot, obj_list=params.obj_list)
-                    cls_loss = cls_loss.mean()
-                    reg_loss = reg_loss.mean()
+                    # change loss
+                    # cls_loss, reg_loss = model(imgs, annot, obj_list=params.obj_list)
+                    # cls_loss = cls_loss.mean()
+                    # reg_loss = reg_loss.mean()
+                    # loss = cls_loss + reg_loss
+                    # TODO: does the mean operation make sense here?
+                    loss_dict = model(imgs, annot, mask, obj_list=params.obj_list)
+                    cls_loss = loss_dict["loss_retina_cls"].mean()
+                    reg_loss = loss_dict["loss_retina_reg"].mean()
 
-                    loss = cls_loss + reg_loss
+                    mask_loss = 0
+                    if "loss_mask" in loss_dict:
+                        mask_loss = loss_dict["loss_mask"].mean()
+
+                    loss = cls_loss + reg_loss + mask_loss
                     if loss == 0 or not torch.isfinite(loss):
                         continue
 
@@ -250,12 +254,13 @@ def train(opt):
                     epoch_loss.append(float(loss))
 
                     progress_bar.set_description(
-                        'Step: {}. Epoch: {}/{}. Iteration: {}/{}. Cls loss: {:.5f}. Reg loss: {:.5f}. Total loss: {:.5f}'.format(
+                        'Step: {}. Epoch: {}/{}. Iteration: {}/{}. Cls loss: {:.5f}. Reg loss: {:.5f}. Mask loss: {:.5f}. Total loss: {:.5f}'.format(
                             step, epoch, opt.num_epochs, iter + 1, num_iter_per_epoch, cls_loss.item(),
-                            reg_loss.item(), loss.item()))
+                            reg_loss.item(), mask_loss.item(), loss.item()))
                     writer.add_scalars('Loss', {'train': loss}, step)
                     writer.add_scalars('Regression_loss', {'train': reg_loss}, step)
                     writer.add_scalars('Classfication_loss', {'train': cls_loss}, step)
+                    writer.add_scalars('Mask_loss', {'train': mask_loss}, step)
 
                     # log learning_rate
                     current_lr = optimizer.param_groups[0]['lr']
@@ -277,36 +282,46 @@ def train(opt):
                 model.eval()
                 loss_regression_ls = []
                 loss_classification_ls = []
+                loss_mask_ls = []
                 for iter, data in enumerate(val_generator):
                     with torch.no_grad():
                         imgs = data['img']
                         annot = data['annot']
+                        mask = data['mask']
 
                         if params.num_gpus == 1:
                             imgs = imgs.cuda()
                             annot = annot.cuda()
+                            mask = mask.cuda()
 
-                        cls_loss, reg_loss = model(imgs, annot, obj_list=params.obj_list)
-                        cls_loss = cls_loss.mean()
-                        reg_loss = reg_loss.mean()
+                        loss_dict = model(imgs, annot, mask, obj_list=params.obj_list)
+                        cls_loss = loss_dict["loss_retina_cls"].mean()
+                        reg_loss = loss_dict["loss_retina_reg"].mean()
 
-                        loss = cls_loss + reg_loss
+                        mask_loss = 0
+                        if "loss_mask" in loss_dict:
+                            mask_loss = loss_dict["loss_mask"].mean()
+
+                        loss = cls_loss + reg_loss + mask_loss
                         if loss == 0 or not torch.isfinite(loss):
                             continue
 
                         loss_classification_ls.append(cls_loss.item())
                         loss_regression_ls.append(reg_loss.item())
+                        loss_mask_ls.append(mask_loss.item())
 
                 cls_loss = np.mean(loss_classification_ls)
                 reg_loss = np.mean(loss_regression_ls)
-                loss = cls_loss + reg_loss
+                mask_loss = np.mean(loss_mask_ls)
+                loss = cls_loss + reg_loss + mask_loss
 
                 print(
-                    'Val. Epoch: {}/{}. Classification loss: {:1.5f}. Regression loss: {:1.5f}. Total loss: {:1.5f}'.format(
-                        epoch, opt.num_epochs, cls_loss, reg_loss, loss))
+                    'Val. Epoch: {}/{}. Classification loss: {:1.5f}. Regression loss: {:1.5f}. Mask loss: {:1.5f}. Total loss: {:1.5f}'.format(
+                        epoch, opt.num_epochs, cls_loss, reg_loss, mask_loss, loss))
                 writer.add_scalars('Loss', {'val': loss}, step)
                 writer.add_scalars('Regression_loss', {'val': reg_loss}, step)
                 writer.add_scalars('Classfication_loss', {'val': cls_loss}, step)
+                writer.add_scalars('Mask_loss', {'val': mask_loss}, step)
 
                 if loss + opt.es_min_delta < best_loss:
                     best_loss = loss
@@ -315,7 +330,7 @@ def train(opt):
                     save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
 
                 model.train()
-                           
+
                 # Early stopping
                 if epoch - best_epoch > opt.es_patience > 0:
                     print('[Info] Stop training at epoch {}. The lowest loss achieved is {}'.format(epoch, best_loss))

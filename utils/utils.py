@@ -300,7 +300,8 @@ def plot_one_box(img, coord, label=None, score=None, color=None, line_thickness=
         cv2.rectangle(img, c1, c2 , color, -1)  # filled
         cv2.putText(img, '{}: {:.0%}'.format(label, score), (c1[0],c1[1] - 2), 0, float(tl) / 3, [0, 0, 0], thickness=tf, lineType=cv2.FONT_HERSHEY_SIMPLEX)
 
-def to_bbox_detections(images, detections, fpn_post_nms_top_n=100):
+
+def to_bbox_detections(detections, img_size=512, fpn_post_nms_top_n=100):
     """
     Arguments:
         detections: [{'rois': array([[333.90854, 239.91882, 424.3854 , 287.47577],..
@@ -312,11 +313,12 @@ def to_bbox_detections(images, detections, fpn_post_nms_top_n=100):
         boxlists (list[BoxList]): the post-processed anchors, after
             applying box decoding and NMS
     """
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+
     boxes = []
-    for i, detection in enumerate(detections):
-
-        image_width, image_height = images.image_sizes[i]
-
+    for detection in detections:
         rois = detection['rois']
         number_of_detections = len(rois)
 
@@ -325,9 +327,9 @@ def to_bbox_detections(images, detections, fpn_post_nms_top_n=100):
             labels = detection['class_ids']
             scores = detection['scores']
 
-            boxlist = BoxList(torch.Tensor(rois).to("cuda"), (image_width, image_height))
-            boxlist.add_field("labels", torch.Tensor(labels).type(torch.LongTensor).to("cuda"))
-            boxlist.add_field("scores", torch.Tensor(scores).to("cuda"))
+            boxlist = BoxList(torch.Tensor(rois).to(device), (img_size, img_size))
+            boxlist.add_field("labels", torch.Tensor(labels).type(torch.LongTensor).to(device))
+            boxlist.add_field("scores", torch.Tensor(scores).to(device))
             if number_of_detections > fpn_post_nms_top_n:
                 cls_scores = boxlist.get_field("scores")
                 image_thresh, _ = torch.kthvalue(
@@ -339,11 +341,11 @@ def to_bbox_detections(images, detections, fpn_post_nms_top_n=100):
                 boxlist = boxlist[keep]
             boxes.append(boxlist)
         else:
-            empty_boxlist = BoxList(torch.zeros(1, 4).to('cuda'), (image_width, image_height))
+            empty_boxlist = BoxList(torch.zeros(1, 4).to(device), (img_size, img_size))
             empty_boxlist.add_field(
-                "labels", torch.LongTensor([1]).to('cuda'))
+                "labels", torch.LongTensor([1]).to(device))
             empty_boxlist.add_field(
-                "scores", torch.Tensor([0.01]).to('cuda'))
+                "scores", torch.Tensor([0.01]).to(device))
             boxes.append(empty_boxlist)
 
     # print("---------------boxes (top 100 after nms) --------------")
@@ -354,6 +356,18 @@ def to_bbox_detections(images, detections, fpn_post_nms_top_n=100):
 
     return boxes
 
-def to_bbox_targets(annotations):
-    # TODO: convert annotations to targets
-    return []
+def to_bbox_targets(annotations, masks, img_size=512):
+    device = "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+
+    targets = []
+    for annot, mask in zip(annotations, masks):
+        bboxes = annot[:, :4]
+        labels = annot[:, -1]
+        boxlist = BoxList(bboxes.to(device), (img_size, img_size))
+        boxlist.add_field("labels", labels.type(torch.LongTensor).to(device))
+        boxlist.add_field("masks", mask.to(device))
+        targets.append(boxlist)
+
+    return targets
