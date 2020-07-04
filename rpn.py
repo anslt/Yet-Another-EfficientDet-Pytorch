@@ -47,7 +47,7 @@ class ModelWithRPN(nn.Module):
                 clipBoxes = ClipBoxes()
                 out = postprocess(imgs.detach(), anchors, regression, classification, regressBoxes, clipBoxes,
                                   self.pre_nms_thresh, self.nms_thresh)
-                detections = to_bbox_detections(out, img_size = self.image_size, fpn_post_nms_top_n=self.fpn_post_nms_top_n)
+                detections = to_bbox_detections(out, img_size=self.image_size, fpn_post_nms_top_n=self.fpn_post_nms_top_n)
         return (anchors, detections), losses
 
     def _forward_test(self, anchors, classification, regression, imgs):
@@ -57,7 +57,7 @@ class ModelWithRPN(nn.Module):
         #TODO: retinamask does nms per class(label) but Yet-Anotehr does nms all togehter
         out = postprocess(imgs.detach(), anchors, regression, classification, regressBoxes, clipBoxes,
                           self.pre_nms_thresh, self.nms_thresh)
-        boxes = to_bbox_detections(out, img_size = self.image_size, fpn_post_nms_top_n=self.fpn_post_nms_top_n)
+        boxes = to_bbox_detections(out, img_size=self.image_size, fpn_post_nms_top_n=self.fpn_post_nms_top_n)
 
         return (anchors, boxes), {}
 

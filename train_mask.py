@@ -81,7 +81,7 @@ def train(opt):
     params = Params(f'projects/{opt.project}.yml')
 
     cfg.merge_from_file(opt.config_file)
-    cfg.MODEL.MASK_ON = False
+    cfg.MODEL.MASK_ON = True
     cfg.RETINANET.NUM_CLASSES = len(params.obj_list)
     cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(params.obj_list)
     cfg.freeze()
@@ -239,7 +239,7 @@ def train(opt):
                     cls_loss = loss_dict["loss_retina_cls"].mean()
                     reg_loss = loss_dict["loss_retina_reg"].mean()
 
-                    mask_loss = 0
+                    mask_loss = torch.zeros(1).mean()
                     if "loss_mask" in loss_dict:
                         mask_loss = loss_dict["loss_mask"].mean()
 
