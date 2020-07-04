@@ -264,7 +264,7 @@ class SegmentationMask(object):
         self.mode = mode
 
     def resize_img(self, size):
-        self.polygons = [Polygons(p, size, mode) for p in self.polygons]
+        self.polygons = [Polygons(p, size, self.mode) for p in self.polygons]
         self.size = size
         return self
 
