@@ -365,6 +365,7 @@ def to_bbox_targets(annotations, masks, img_size=512):
     for annot, mask in zip(annotations, masks):
         bboxes = annot[:, :4]
         labels = annot[:, -1]
+        print()
         print("annot",len(bboxes))
         print("mask",len(mask.polygons))
         boxlist = BoxList(bboxes.to(device), (img_size, img_size))

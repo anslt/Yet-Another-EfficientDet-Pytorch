@@ -220,7 +220,8 @@ def train(opt):
                     imgs = data['img']
                     annot = data['annot']
                     mask = data['mask']
-
+                    
+                    print(params.num_gpus)
                     if params.num_gpus == 1:
                         # if only one gpu, just send it to cuda:0
                         # elif multiple gpus, send it to multiple gpus in CustomDataParallel, not here
