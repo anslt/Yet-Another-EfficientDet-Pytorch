@@ -39,16 +39,14 @@ class CocoDataset(Dataset):
         return len(self.image_ids)
 
     def __getitem__(self, idx):
-
+        
         img = self.load_image(idx)
         annot, mask = self.load_annotations(idx)
         mask = SegmentationMask(mask, img.shape[:2])
         sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
-        print(sample["mask"])
-        sample["mask"] =  sample["mask"].resize_img(img[:2])
-        print(sample['mask'])
+
         return sample
 
     def load_image(self, image_index):
@@ -145,6 +143,7 @@ class Resizer(object):
 
         annots[:, :4] *= scale
         masks = masks.resize((resized_height, resized_width))
+        masks = masks.resize_img((self.img_size, self.img_size))
 
         return {'img': torch.from_numpy(new_image).to(torch.float32), 'annot': torch.from_numpy(annots),
                 'mask': masks, 'scale': scale}
