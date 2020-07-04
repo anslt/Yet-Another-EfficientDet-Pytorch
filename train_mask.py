@@ -222,14 +222,12 @@ def train(opt):
                     mask_raw = data['mask']
                     num_raw= data['num']
 
-                    keep = np.where(num_raw > 0)[0]
+                    keep = np.where(np.array(num_raw) > 0)[0]
                     imgs = imgs[keep, ...]
                     annot = annot[keep, ...]
                     mask = [ mask_raw[k] for k in keep]
                     num = [ num_raw[k] for k in keep ]
 
-
-                    
 
                     if params.num_gpus == 1:
                         # if only one gpu, just send it to cuda:0
