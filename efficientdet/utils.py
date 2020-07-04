@@ -151,7 +151,7 @@ class Polygons(object):
     def __init__(self, polygons, size, mode):
         # assert isinstance(polygons, list), '{}'.format(polygons)
         if isinstance(polygons, list):
-            polygons = [torch.FloatTensor(p, dtype=torch.float32) for p in polygons]
+            polygons = [torch.as_tensor(p, dtype=torch.float32) for p in polygons]
         elif isinstance(polygons, Polygons):
             polygons = polygons.polygons
 

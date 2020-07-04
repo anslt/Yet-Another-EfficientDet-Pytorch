@@ -81,7 +81,7 @@ class CocoDataset(Dataset):
             annotation[0, 4] = a['category_id'] - 1
             annotations = np.append(annotations, annotation, axis=0)
 
-            masks += a["segmentation"]
+            masks += [a["segmentation"]]
 
         # transform from [x, y, w, h] to [x1, y1, x2, y2]
         annotations[:, 2] = annotations[:, 0] + annotations[:, 2]
