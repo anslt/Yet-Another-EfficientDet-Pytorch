@@ -220,6 +220,7 @@ def train(opt):
                     imgs = data['img']
                     annot = data['annot']
                     mask = data['mask']
+                    num = data['num']
                     
 
                     if params.num_gpus == 1:
@@ -227,7 +228,7 @@ def train(opt):
                         # elif multiple gpus, send it to multiple gpus in CustomDataParallel, not here
                         imgs = imgs.cuda()
                         annot = annot.cuda()
-                        mask = mask.cuda()
+                        mask = [ k.to() for k in mask ]
 
                     optimizer.zero_grad()
                     # change loss
@@ -236,7 +237,7 @@ def train(opt):
                     # reg_loss = reg_loss.mean()
                     # loss = cls_loss + reg_loss
                     # TODO: does the mean operation make sense here?
-                    loss_dict = model(imgs, annot, mask, obj_list=params.obj_list)
+                    loss_dict = model(imgs, annot, mask, num, obj_list=params.obj_list)
                     cls_loss = loss_dict["loss_retina_cls"].mean()
                     reg_loss = loss_dict["loss_retina_reg"].mean()
 

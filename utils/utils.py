@@ -356,19 +356,16 @@ def to_bbox_detections(detections, img_size=512, fpn_post_nms_top_n=100):
 
     return boxes
 
-def to_bbox_targets(annotations, masks, img_size=512):
-    device = "cpu"
-    if torch.cuda.is_available():
-        device = "cuda"
+def to_bbox_targets(annotations, masks, nums, img_size=512):
 
     targets = []
-    for annot, mask in zip(annotations, masks):
-        bboxes = annot[:, :4]
-        labels = annot[:, -1]
-        print()
+    for annot, mask, num in zip(annotations, masks, nums):
+        bboxes = annot[:num, :4]
+        labels = annot[:num, -1]
+
         print("annot",len(bboxes))
         print("mask",len(mask.polygons))
-        boxlist = BoxList(bboxes.to(device), (img_size, img_size))
+        boxlist = BoxList(bboxes, (img_size, img_size))
         boxlist.add_field("labels", labels.type(torch.LongTensor).to(device))
         boxlist.add_field("masks", mask.to(device))
         targets.append(boxlist)

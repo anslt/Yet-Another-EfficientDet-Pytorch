@@ -95,9 +95,11 @@ def collater(data):
     scales = [s['scale'] for s in data]
     mask = [s['mask'] for s in data]
 
+
     imgs = torch.from_numpy(np.stack(imgs, axis=0))
 
     max_num_annots = max(annot.shape[0] for annot in annots)
+    num_annots = [ annot.shape[0] for annot in annots]
 
     if max_num_annots > 0:
 
@@ -111,7 +113,7 @@ def collater(data):
 
     imgs = imgs.permute(0, 3, 1, 2)
 
-    return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": mask}
+    return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": mask, "num": num_annots}
 
 
 class Resizer(object):
