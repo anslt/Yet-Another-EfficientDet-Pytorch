@@ -151,7 +151,7 @@ class Polygons(object):
     def __init__(self, polygons, size, mode):
         # assert isinstance(polygons, list), '{}'.format(polygons)
         if isinstance(polygons, list):
-            polygons = [torch.as_tensor(p, dtype=torch.float32) for p in polygons]
+            polygons = [torch.FloatTensor(p, dtype=torch.float32) for p in polygons]
         elif isinstance(polygons, Polygons):
             polygons = polygons.polygons
 
@@ -175,7 +175,6 @@ class Polygons(object):
         elif method == FLIP_TOP_BOTTOM:
             dim = height
             idx = 1
-
         for poly in self.polygons:
             p = poly.clone()
             TO_REMOVE = 1
