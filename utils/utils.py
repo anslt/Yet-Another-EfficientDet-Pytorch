@@ -362,11 +362,11 @@ def to_bbox_targets(annotations, masks, img_size=512):
         device = "cuda"
 
     targets = []
-    print(len(annotations))
-    print(len(masks))
     for annot, mask in zip(annotations, masks):
         bboxes = annot[:, :4]
         labels = annot[:, -1]
+        print(len(bboxes))
+        print(len(mask.polygons))
         boxlist = BoxList(bboxes.to(device), (img_size, img_size))
         boxlist.add_field("labels", labels.type(torch.LongTensor).to(device))
         boxlist.add_field("masks", mask.to(device))
