@@ -42,7 +42,7 @@ class CocoDataset(Dataset):
 
         img = self.load_image(idx)
         annot, mask = self.load_annotations(idx)
-        masks = SegmentationMask(mask, img.size())
+        mask = SegmentationMask(mask, img.size())
         sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
@@ -92,7 +92,7 @@ def collater(data):
     imgs = [s['img'] for s in data]
     annots = [s['annot'] for s in data]
     scales = [s['scale'] for s in data]
-    masks = [s['mask'] for s in data]
+    mask = [s['mask'] for s in data]
 
     imgs = torch.from_numpy(np.stack(imgs, axis=0))
 
@@ -110,7 +110,7 @@ def collater(data):
 
     imgs = imgs.permute(0, 3, 1, 2)
 
-    return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": masks}
+    return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": mask}
 
 
 class Resizer(object):
@@ -137,8 +137,10 @@ class Resizer(object):
         new_image[0:resized_height, 0:resized_width] = image
 
         annots[:, :4] *= scale
+        masks = masks.Resize((resized_height, resized_width))
 
-        return {'img': torch.from_numpy(new_image).to(torch.float32), 'annot': torch.from_numpy(annots), 'scale': scale}
+        return {'img': torch.from_numpy(new_image).to(torch.float32), 'annot': torch.from_numpy(annots),
+                'mask': masks, 'scale': scale}
 
 
 class Augmenter(object):
@@ -146,7 +148,7 @@ class Augmenter(object):
 
     def __call__(self, sample, flip_x=0.5):
         if np.random.rand() < flip_x:
-            image, annots = sample['img'], sample['annot']
+            image, annots, masks = sample['img'], sample['annot'], sample['mask']
             image = image[:, ::-1, :]
 
             rows, cols, channels = image.shape
@@ -159,7 +161,9 @@ class Augmenter(object):
             annots[:, 0] = cols - x2
             annots[:, 2] = cols - x_tmp
 
-            sample = {'img': image, 'annot': annots}
+            masks.polygons = masks.transpose(0)
+
+            sample = {'img': image, 'annot': annots, 'mask': masks}
 
         return sample
 
@@ -171,7 +175,7 @@ class Normalizer(object):
         self.std = np.array([[std]])
 
     def __call__(self, sample):
-        image, annots = sample['img'], sample['annot']
+        image, annots, masks = sample['img'], sample['annot'], sample['mask']
 
-        return {'img': ((image.astype(np.float32) - self.mean) / self.std), 'annot': annots}
+        return {'img': ((image.astype(np.float32) - self.mean) / self.std), 'annot': annots, "mask": masks}
 
