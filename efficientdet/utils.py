@@ -297,7 +297,7 @@ class SegmentationMask(object):
         return SegmentationMask(scaled, size=size, mode=self.mode)
 
     def to(self, device="cuda", **kwargs):
-        self.polygons = [ p.polygons.to(device) for p in self.polygons]
+        self.polygons = [ p.to(device) for p in self.polygons]
         return self
 
     def __getitem__(self, item):
