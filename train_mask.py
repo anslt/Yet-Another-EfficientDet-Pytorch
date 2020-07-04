@@ -226,7 +226,11 @@ def train(opt):
                         # elif multiple gpus, send it to multiple gpus in CustomDataParallel, not here
                         imgs = imgs.cuda()
                         annot = annot.cuda()
+                        print("annot_t")
+                        print(annot)
                         mask = mask.cuda()
+                        print("mask_t")
+                        print(mask)
 
                     optimizer.zero_grad()
                     # change loss
