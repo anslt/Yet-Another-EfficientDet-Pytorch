@@ -363,10 +363,8 @@ def to_bbox_targets(annotations, masks, nums, img_size=512):
         bboxes = annot[:num, :4]
         labels = annot[:num, -1]
 
-        print("annot",len(bboxes))
-        print("mask",len(mask.polygons))
         boxlist = BoxList(bboxes, (img_size, img_size))
-        boxlist.add_field("labels", labels.type(torch.LongTensor).to(device))
+        boxlist.add_field("labels", labels.type(torch.LongTensor))
         boxlist.add_field("masks", mask.to(device))
         targets.append(boxlist)
 
