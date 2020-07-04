@@ -295,14 +295,16 @@ def train(opt):
                     with torch.no_grad():
                         imgs = data['img']
                         annot = data['annot']
-                        mask = data['mask']
+                        mask_raw = data['mask']
+                        num_raw = data['num']
 
-                        if params.num_gpus == 1:
-                            imgs = imgs.cuda()
-                            annot = annot.cuda()
-                            mask = mask.cuda()
+                        keep = np.where(np.array(num_raw) > 0)[0]
+                        imgs = imgs[keep, ...]
+                        annot = annot[keep, ...]
+                        mask = [mask_raw[k] for k in keep]
+                        num = [num_raw[k] for k in keep]
 
-                        loss_dict = model(imgs, annot, mask, obj_list=params.obj_list)
+                        loss_dict = model(imgs, annot, mask, num, obj_list=params.obj_list)
                         cls_loss = loss_dict["loss_retina_cls"].mean()
                         reg_loss = loss_dict["loss_retina_reg"].mean()
 

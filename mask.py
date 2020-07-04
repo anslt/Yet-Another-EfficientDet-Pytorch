@@ -67,6 +67,6 @@ class EfficientMask(nn.Module):
                         image_detections = image_detections[keep]
 
                     proposals.append(image_detections)
-                    x, detections, mask_losses = self.mask(features, proposals, targets)
-            return detections
+                    x, detections_seg, mask_losses = self.mask(features, proposals, targets)
+            return detections, detections_seg
 
