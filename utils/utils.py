@@ -364,7 +364,10 @@ def to_bbox_targets(annotations, masks, nums, img_size=512):
         labels = annot[:num, -1]
 
         boxlist = BoxList(bboxes, (img_size, img_size))
-        boxlist.add_field("labels", labels.type(torch.LongTensor))
+        if cuda.device == "cpu"
+           boxlist.add_field("labels", labels.type(torch.LongTensor))
+        else:
+           boxlist.add_field("labels", labels.type(torch.cuda.LongTensor))
         boxlist.add_field("masks", mask)
         targets.append(boxlist)
 

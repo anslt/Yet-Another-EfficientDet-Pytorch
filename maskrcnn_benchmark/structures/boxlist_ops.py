@@ -95,7 +95,6 @@ def _cat(tensors, dim=0):
     """
     assert isinstance(tensors, (list, tuple))
     for k in tensors:
-        print(k)
         print(k.device)
     if len(tensors) == 1:
         return tensors[0]
