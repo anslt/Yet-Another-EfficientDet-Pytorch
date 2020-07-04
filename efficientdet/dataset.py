@@ -85,6 +85,9 @@ class CocoDataset(Dataset):
         annotations[:, 2] = annotations[:, 0] + annotations[:, 2]
         annotations[:, 3] = annotations[:, 1] + annotations[:, 3]
 
+        print(annotations)
+        print(masks)
+
         return annotations, masks
 
 
