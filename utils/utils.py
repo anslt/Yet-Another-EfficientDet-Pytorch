@@ -363,7 +363,7 @@ def to_bbox_targets(annotations, masks, img_size=512):
 
     targets = []
     print(len(annotations))
-    print(len(masks.polygons))
+    print(len(masks))
     for annot, mask in zip(annotations, masks):
         bboxes = annot[:, :4]
         labels = annot[:, -1]
