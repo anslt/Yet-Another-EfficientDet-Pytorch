@@ -360,6 +360,7 @@ def to_bbox_targets(annotations, masks, nums, img_size=512):
 
     targets = []
     for annot, mask, num in zip(annotations, masks, nums):
+        print(annot.device)
         bboxes = annot[:num, :4]
         labels = annot[:num, -1]
 
