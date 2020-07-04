@@ -360,13 +360,12 @@ def to_bbox_targets(annotations, masks, nums, img_size=512):
 
     targets = []
     for annot, mask, num in zip(annotations, masks, nums):
-        print(annot.device)
         bboxes = annot[:num, :4]
         labels = annot[:num, -1]
 
         boxlist = BoxList(bboxes, (img_size, img_size))
-        boxlist.add_field("labels", labels.type(torch.LongTensor))
-        boxlist.add_field("masks", mask)
+        boxlist.add_field("labels", labels.type(torch.LongTensor).cpu())
+        boxlist.add_field("masks", mask.cpu())
         targets.append(boxlist)
 
     return targets
