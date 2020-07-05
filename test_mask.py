@@ -50,11 +50,8 @@ def main():
     #     )
 
     compound_coef = args.compound_coef
-    nms_threshold = args.nms_threshold
     use_cuda = args.cuda
     gpu = args.device
-    use_float16 = args.float16
-    override_prev_results = args.override
     project_name = args.project
     weights_path = f'weights/efficientdet-d{compound_coef}.pth' if args.weights is None else args.weights
 
@@ -69,6 +66,11 @@ def main():
     cfg.RETINANET.NUM_CLASSES = len(obj_list)
     cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(obj_list)
     cfg.freeze()
+
+    if use_cuda:
+        device = "cuda"
+    else:
+        device = "cpu"
 
     save_dir = ""
     # logger = setup_logger("maskrcnn_benchmark", save_dir, get_rank())
@@ -115,7 +117,7 @@ def main():
             iou_types=iou_types,
             #box_only=cfg.MODEL.RPN_ONLY,
             box_only=False if cfg.RETINANET.RETINANET_ON else cfg.MODEL.RPN_ONLY,
-            device="cpu",
+            device=device,
             expected_results=cfg.TEST.EXPECTED_RESULTS,
             expected_results_sigma_tol=cfg.TEST.EXPECTED_RESULTS_SIGMA_TOL,
             output_folder=output_folder,
