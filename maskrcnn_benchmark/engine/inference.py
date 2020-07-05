@@ -41,9 +41,7 @@ def compute_on_dataset(model, data_loader, obj_list, device):
 def prepare_for_coco_detection(predictions, dataset):
     # assert isinstance(dataset, COCODataset)
     coco_results = []
-    for image_id, prediction in enumerate(predictions):
-        # original_id = dataset.id_to_img_map[image_id]
-        original_id = image_id
+    for original_id, prediction in predictions.items():
         if len(prediction) == 0:
             continue
 
@@ -80,9 +78,9 @@ def prepare_for_coco_segmentation(predictions, dataset):
     masker = Masker(threshold=0.5, padding=1)
     # assert isinstance(dataset, COCODataset)
     coco_results = []
-    for image_id, prediction in tqdm(enumerate(predictions)):
+    # for image_id, prediction in tqdm(enumerate(predictions)):
         # original_id = dataset.id_to_img_map[image_id]
-        original_id = image_id
+    for original_id, prediction in predictions.items():
         if len(prediction) == 0:
             continue
 
@@ -367,6 +365,7 @@ def inference(
     num_devices = 1
     logger = logging.getLogger("maskrcnn_benchmark.inference")
     dataset = data_loader.dataset
+    # check_coco = dataset.coco.imgs[397133]['height']
     logger.info("Start evaluation on {} images".format(len(dataset)))
     start_time = time.time()
     predictions = compute_on_dataset(model, data_loader, obj_list, device)
@@ -380,7 +379,7 @@ def inference(
         )
     )
 
-    predictions = _accumulate_predictions_from_multiple_gpus(predictions)
+    # predictions = _accumulate_predictions_from_multiple_gpus(predictions)
     if not is_main_process():
         return
 
