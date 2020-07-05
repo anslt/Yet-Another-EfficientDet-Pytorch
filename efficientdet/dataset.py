@@ -18,6 +18,13 @@ class CocoDataset(Dataset):
         self.coco = COCO(os.path.join(self.root_dir, 'annotations', 'instances_' + self.set_name + '.json'))
         self.image_ids = self.coco.getImgIds()
 
+        self.json_category_id_to_contiguous_id = {
+            v: i + 1 for i, v in enumerate(self.coco.getCatIds())
+        }
+        self.contiguous_category_id_to_json_id = {
+            v: k for k, v in self.json_category_id_to_contiguous_id.items()
+        }
+
         self.load_classes()
 
     def load_classes(self):
@@ -41,12 +48,13 @@ class CocoDataset(Dataset):
     def __getitem__(self, idx):
         
         img = self.load_image(idx)
+        id = self.image_ids[idx]
         annot, mask = self.load_annotations(idx)
         mask = SegmentationMask(mask, img.shape[:2])
         sample = {'img': img, 'annot': annot, "mask": mask}
         if self.transform:
             sample = self.transform(sample)
-
+        sample.update({"id": id})
         return sample
 
     def load_image(self, image_index):
@@ -90,10 +98,12 @@ class CocoDataset(Dataset):
 
 
 def collater(data):
+    data = data
     imgs = [s['img'] for s in data]
     annots = [s['annot'] for s in data]
     scales = [s['scale'] for s in data]
     mask = [s['mask'] for s in data]
+    id = [s['id'] for s in data]
 
 
     imgs = torch.from_numpy(np.stack(imgs, axis=0))
@@ -113,7 +123,7 @@ def collater(data):
 
     imgs = imgs.permute(0, 3, 1, 2)
 
-    return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": mask, "num": num_annots}
+    return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": mask, "num": num_annots, "id": id}
 
 
 class Resizer(object):

@@ -111,6 +111,7 @@ def main():
         inference(
             model,
             data_loader_val,
+            obj_list,
             iou_types=iou_types,
             #box_only=cfg.MODEL.RPN_ONLY,
             box_only=False if cfg.RETINANET.RETINANET_ON else cfg.MODEL.RPN_ONLY,

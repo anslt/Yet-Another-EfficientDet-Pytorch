@@ -20,16 +20,17 @@ from maskrcnn_benchmark.modeling.roi_heads.mask_head.inference import Masker
 from maskrcnn_benchmark.structures.boxlist_ops import boxlist_iou
 
 
-def compute_on_dataset(model, data_loader, device):
+def compute_on_dataset(model, data_loader, obj_list, device):
     model.eval()
     results_dict = {}
     cpu_device = torch.device("cpu")
     for i, batch in tqdm(enumerate(data_loader)):
-        batch = batch
-        images, targets, image_ids = batch
+        images = batch["img"]
+        image_ids = batch["id"]
         images = images.to(device)
         with torch.no_grad():
-            output = model(images)
+            dummy = []
+            output = model(images, [], [], [], obj_list=obj_list)
             output = [o.to(cpu_device) for o in output]
         results_dict.update(
             {img_id: result for img_id, result in zip(image_ids, output)}
@@ -352,6 +353,7 @@ def check_expected_results(results, expected_results, sigma_tol):
 def inference(
     model,
     data_loader,
+    obj_list,
     iou_types=("bbox",),
     box_only=False,
     device="cuda",
@@ -367,7 +369,7 @@ def inference(
     dataset = data_loader.dataset
     logger.info("Start evaluation on {} images".format(len(dataset)))
     start_time = time.time()
-    predictions = compute_on_dataset(model, data_loader, device)
+    predictions = compute_on_dataset(model, data_loader, obj_list, device)
     # wait for all processes to complete before measuring the time
     synchronize()
     total_time = time.time() - start_time
