@@ -29,7 +29,7 @@ ap.add_argument('-p', '--project', type=str, default='coco', help='project file 
 ap.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
 ap.add_argument('-w', '--weights', type=str, default=None, help='/path/to/weights')
 ap.add_argument('--nms_threshold', type=float, default=0.5, help='nms threshold, don\'t change it if not for testing purposes')
-ap.add_argument('--cuda', type=bool, default=True)
+ap.add_argument('--cuda', type=bool, default=False)
 ap.add_argument('--device', type=int, default=0)
 ap.add_argument('--float16', type=bool, default=False)
 ap.add_argument('--override', type=bool, default=True, help='override previous bbox results file if exists')
@@ -139,6 +139,7 @@ if __name__ == '__main__':
     SET_NAME = params['val_set']
     VAL_GT = f'datasets/{params["project_name"]}/annotations/instances_{SET_NAME}.json'
     VAL_IMGS = f'datasets/{params["project_name"]}/{SET_NAME}/'
+    # MAX_IMAGES = 10
     MAX_IMAGES = 10000
     coco_gt = COCO(VAL_GT)
     image_ids = coco_gt.getImgIds()[:MAX_IMAGES]

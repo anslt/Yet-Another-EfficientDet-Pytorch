@@ -125,6 +125,7 @@ def train(opt):
 
     model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
                                  ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
+    model = EfficientMask(cfg, model, debug=opt.debug)
 
     # load last weights
     if opt.load_weights is not None:
@@ -178,9 +179,6 @@ def train(opt):
         use_sync_bn = False
 
     writer = SummaryWriter(opt.log_path + f'/{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}/')
-
-    # warp the model with loss function, to reduce the memory usage on gpu0 and speedup
-    model = EfficientMask(cfg, model, debug=opt.debug)
 
     if params.num_gpus > 0:
         model = model.cuda()

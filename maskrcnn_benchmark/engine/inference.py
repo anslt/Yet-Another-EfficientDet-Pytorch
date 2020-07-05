@@ -25,6 +25,7 @@ def compute_on_dataset(model, data_loader, device):
     results_dict = {}
     cpu_device = torch.device("cpu")
     for i, batch in tqdm(enumerate(data_loader)):
+        batch = batch
         images, targets, image_ids = batch
         images = images.to(device)
         with torch.no_grad():
@@ -359,11 +360,7 @@ def inference(
 
     # convert to a torch.device for efficiency
     device = torch.device(device)
-    num_devices = (
-        torch.distributed.deprecated.get_world_size()
-        if torch.distributed.deprecated.is_initialized()
-        else 1
-    )
+    num_devices = 1
     logger = logging.getLogger("maskrcnn_benchmark.inference")
     dataset = data_loader.dataset
     logger.info("Start evaluation on {} images".format(len(dataset)))
