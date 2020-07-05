@@ -85,7 +85,9 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
 
             x = x.unsqueeze(0).permute(0, 3, 1, 2)
 
-            preds = model(x, None, None, obj_list=obj_list)
+            annot_dummy = []
+            masks_dummy = []
+            preds = model(x, annot_dummy, masks_dummy, obj_list=obj_list)
 
             if not preds:
                 continue
@@ -160,7 +162,8 @@ if __name__ == '__main__':
 
     if override_prev_results or not os.path.exists(f'{SET_NAME}_bbox_results.json'):
         model = EfficientMask(cfg, debug=False, compound_coef=compound_coef, num_classes=len(obj_list))
-        model.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
+        weights = torch.load(weights_path, map_location=torch.device('cpu'))
+        model.load_state_dict(weights)
         model.requires_grad_(False)
         model.eval()
 

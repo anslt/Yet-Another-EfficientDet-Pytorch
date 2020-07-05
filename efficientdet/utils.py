@@ -235,10 +235,6 @@ class Polygons(object):
             # TODO add squeeze?
             return mask
 
-    def to(self, device="cuda", **kwargs):
-        self.polygons = [ p.to(device) for p in self.polygons]
-        return self
-
     def __repr__(self):
         s = self.__class__.__name__ + "("
         s += "num_polygons={}, ".format(len(self.polygons))
@@ -296,8 +292,7 @@ class SegmentationMask(object):
             scaled.append(polygon.resize(size, *args, **kwargs))
         return SegmentationMask(scaled, size=size, mode=self.mode)
 
-    def to(self, device="cuda", **kwargs):
-        self.polygons = [ p.to(device) for p in self.polygons]
+    def to(self, *args, **kwargs):
         return self
 
     def __getitem__(self, item):

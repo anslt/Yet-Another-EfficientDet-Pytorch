@@ -22,11 +22,11 @@ class EfficientMask(nn.Module):
         self.input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536]
         self.image_size = self.input_sizes[self.cfg.EFFICIENTNET.COEF]
 
-    def forward(self, imgs, annotations, masks, num, obj_list=None):
+    def forward(self, imgs, annotations, masks, obj_list=None):
         features, regression, classification, anchors = self.model(imgs)
         (anchors, detections), detector_losses = self.rpn(imgs, annotations, regression, classification,
                                                           anchors, obj_list=obj_list)
-        targets = to_bbox_targets(annotations, masks, num, img_size=self.image_size)
+        targets = to_bbox_targets(annotations, masks, img_size=self.image_size)
 
         if self.training:
             losses = {}
@@ -67,6 +67,6 @@ class EfficientMask(nn.Module):
                         image_detections = image_detections[keep]
 
                     proposals.append(image_detections)
-                    x, detections_seg, mask_losses = self.mask(features, proposals, targets)
-            return detections, detections_seg
+                    x, detections, mask_losses = self.mask(features, proposals, targets)
+            return detections
 
