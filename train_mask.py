@@ -1,7 +1,7 @@
 # original author: signatrix
 # adapted from https://github.com/signatrix/efficientdet/blob/master/train.py
 # modified by Zylo117
-
+import collections
 import datetime
 import os
 import argparse
@@ -123,9 +123,10 @@ def train(opt):
                                                         Resizer(input_sizes[opt.compound_coef])]))
     val_generator = DataLoader(val_set, **val_params)
 
-    model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
-                                 ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
-    model = EfficientMask(cfg, model, debug=opt.debug)
+    # model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
+    #                              ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
+    model = EfficientMask(cfg, debug=opt.debug, num_classes=len(params.obj_list), compound_coef=opt.compound_coef)
+
 
     # load last weights
     if opt.load_weights is not None:
@@ -139,7 +140,12 @@ def train(opt):
             last_step = 0
 
         try:
-            ret = model.load_state_dict(torch.load(weights_path), strict=False)
+            weights = torch.load(weights_path)
+            wrapped_weights = collections.OrderedDict()
+            for key in weights.keys():
+                if key.startswith(("bifpn", "regressor", "classifier", "backbone_net")):
+                    wrapped_weights["model." + key] = weights[key]
+            ret = model.load_state_dict(wrapped_weights, strict=False)
             if opt.load_backbone_only:
                 model.reload_cls_reg()
         except RuntimeError as e:
@@ -194,6 +200,8 @@ def train(opt):
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
 
+
+
     epoch = 0
     best_loss = 1e5
     best_epoch = 0
@@ -234,6 +242,9 @@ def train(opt):
                     # loss = cls_loss + reg_loss
                     # TODO: does the mean operation make sense here?
                     loss_dict = model(imgs, annot, mask, obj_list=params.obj_list)
+                    # dict_in_model = model.model.state_dict()
+                    # dict_in = model.state_dict()
+
                     cls_loss = loss_dict["loss_retina_cls"].mean()
                     reg_loss = loss_dict["loss_retina_reg"].mean()
 
@@ -343,7 +354,7 @@ def save_checkpoint(model, name):
     if isinstance(model, CustomDataParallel):
         torch.save(model.module.model.state_dict(), os.path.join(opt.saved_path, name))
     else:
-        torch.save(model.model.state_dict(), os.path.join(opt.saved_path, name))
+        torch.save(model.state_dict(), os.path.join(opt.saved_path, name))
 
 
 if __name__ == '__main__':

@@ -1,19 +1,19 @@
 import torch
 from torch import nn
 from rpn import build_rpn
-# from backbone import build_model
+from backbone import build_model
 from maskrcnn_benchmark.modeling.roi_heads.mask_head.mask_head import build_roi_mask_head
 from maskrcnn_benchmark.structures.boxlist_ops import cat_boxlist
 from utils.utils import to_bbox_targets
 
 
 class EfficientMask(nn.Module):
-    def __init__(self, cfg, model, debug=False):
+    def __init__(self, cfg, debug=False, num_classes=80, compound_coef=0):
         super().__init__()
         self.cfg = cfg.clone()
         self.debug = debug
 
-        self.model = model
+        self.model = build_model(num_classes=num_classes, compound_coef=compound_coef)
         self.rpn = build_rpn(cfg)
         self.mask = None
         if self.cfg.MODEL.MASK_ON:

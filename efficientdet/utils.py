@@ -308,8 +308,8 @@ class SegmentationMask(object):
                 item = item.nonzero()
                 item = item.squeeze(1) if item.numel() > 0 else item
                 item = item.tolist()
+            # TODO: fix bug index out of range
             for i in item:
-                # TODO: fix bug index out of range
                 selected_polygons.append(self.polygons[i])
         return SegmentationMask(selected_polygons, size=self.size, mode=self.mode)
 
