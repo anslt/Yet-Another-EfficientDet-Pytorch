@@ -348,26 +348,36 @@ def to_bbox_detections(detections, img_size=512, fpn_post_nms_top_n=100):
                 "scores", torch.Tensor([0.01]).to(device))
             boxes.append(empty_boxlist)
 
-    # print("---------------boxes (top 100 after nms) --------------")
-    # print(boxes)
-    # print(boxes[0].fields())
-    # print(boxes[0].get_field("labels"))
-    # print(boxes[0].get_field("scores"))
-
     return boxes
 
-def to_bbox_targets(annotations, masks, img_size=512):
+def to_bbox_targets(annotations, masks, nums, img_size=512):
     device = "cpu"
     if torch.cuda.is_available():
         device = "cuda"
 
     targets = []
-    for annot, mask in zip(annotations, masks):
-        bboxes = annot[:, :4]
-        labels = annot[:, -1]
-        boxlist = BoxList(bboxes.to(device), (img_size, img_size))
+    for annot, mask, num in zip(annotations, masks, nums):
+        bboxes = annot[:num, :4]
+        labels = annot[:num, -1]
+
+        boxlist = BoxList(bboxes, (img_size, img_size))
+        # if labels.device == "cpu":
+        #    boxlist.add_field("labels", labels.type(torch.LongTensor))
+        # else:
+        #    boxlist.add_field("labels", labels.type(torch.cuda.LongTensor))
         boxlist.add_field("labels", labels.type(torch.LongTensor).to(device))
-        boxlist.add_field("masks", mask.to(device))
+        boxlist.add_field("masks", mask)
         targets.append(boxlist)
 
     return targets
+
+
+# def convert_predictions(preds):
+#     """
+#     convert predictions of mask model for evaluation
+#     """
+#     for pred in preds:
+#         rois = pred.bbox
+#         labels = pred.get_field("labels")
+#         scores = pred.get_fied("scores")
+

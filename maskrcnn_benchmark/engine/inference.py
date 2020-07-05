@@ -41,7 +41,8 @@ def prepare_for_coco_detection(predictions, dataset):
     # assert isinstance(dataset, COCODataset)
     coco_results = []
     for image_id, prediction in enumerate(predictions):
-        original_id = dataset.id_to_img_map[image_id]
+        # original_id = dataset.id_to_img_map[image_id]
+        original_id = image_id
         if len(prediction) == 0:
             continue
 
@@ -79,7 +80,8 @@ def prepare_for_coco_segmentation(predictions, dataset):
     # assert isinstance(dataset, COCODataset)
     coco_results = []
     for image_id, prediction in tqdm(enumerate(predictions)):
-        original_id = dataset.id_to_img_map[image_id]
+        # original_id = dataset.id_to_img_map[image_id]
+        original_id = image_id
         if len(prediction) == 0:
             continue
 

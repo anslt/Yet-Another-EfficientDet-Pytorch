@@ -65,7 +65,8 @@ cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(obj_list)
 cfg.freeze()
 
 def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
-        results = []
+        bbox_results = []
+        segm_results = []
 
         for image_id in tqdm(image_ids):
             image_info = coco.loadImgs(image_id)[0]
@@ -97,13 +98,17 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
             preds = invert_affine(framed_metas, preds)[0]
             # -----------------------------------
 
+            # TODO: convert perdiction to right format
+            # -----------------------------------
             scores = preds['scores']
             class_ids = preds['class_ids']
             rois = preds['rois']
             # TODO: add mask
             # -----------------------------------
-
+            masks = preds['mask']
             # -----------------------------------
+            # -----------------------------------
+
             if rois.shape[0] > 0:
                 # x1,y1,x2,y2 -> x1,y1,w,h
                 rois[:, 2] -= rois[:, 0]
@@ -123,21 +128,26 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
                         'bbox': box.tolist(),
                     }
 
-                    results.append(image_result)
+                    bbox_results.append(image_result)
 
                 # TODO: add results for mask
                 # -----------------------------------
 
                 # -----------------------------------
 
-        if not len(results):
+        if not len(bbox_results):
             raise Exception('the model does not provide any valid output, check model architecture and the data input')
 
         # write output
         filepath = f'{set_name}_bbox_results.json'
         if os.path.exists(filepath):
             os.remove(filepath)
-        json.dump(results, open(filepath, 'w'), indent=4)
+        json.dump(bbox_results, open(filepath, 'w'), indent=4)
+
+        filepath = f'{set_name}_segm_results.json'
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        json.dump(segm_results, open(filepath, 'w'), indent=4)
 
 def _eval(coco_gt, image_ids, pred_json_path):
     # load results in COCO evaluation tool
