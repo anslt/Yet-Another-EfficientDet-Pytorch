@@ -175,7 +175,6 @@ def train(opt):
     if opt.mask_only:
         def freeze_backbone(m):
             classname = m.__class__.__name__
-            print(classname)
             for ntl in ['EfficientNet', 'BiFPN', "Regressor", "Classifier"]:
                 if ntl in classname:
                     for param in m.parameters():
