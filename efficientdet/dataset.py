@@ -6,6 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 from pycocotools.coco import COCO
 import cv2
 from .utils import SegmentationMask
+from utils.coco_category import convert_to_coco_category
 
 
 class CocoDataset(Dataset):
@@ -18,12 +19,17 @@ class CocoDataset(Dataset):
         self.coco = COCO(os.path.join(self.root_dir, 'annotations', 'instances_' + self.set_name + '.json'))
         self.image_ids = self.coco.getImgIds()
 
+        self.contiguous_category_id_to_json_id = convert_to_coco_category()
         self.json_category_id_to_contiguous_id = {
-            v: i + 1 for i, v in enumerate(self.coco.getCatIds())
+            v: k for k, v in self.contiguous_category_id_to_json_id.items()
         }
-        self.contiguous_category_id_to_json_id = {
-            v: k for k, v in self.json_category_id_to_contiguous_id.items()
-        }
+        # self.json_category_id_to_contiguous_id = {
+        #     v: i for i, v in enumerate(self.coco.getCatIds())
+        # }
+        #
+        # self.contiguous_category_id_to_json_id = {
+        #     v: k for k, v in self.json_category_id_to_contiguous_id.items()
+        # }
 
         self.load_classes()
 
