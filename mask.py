@@ -26,6 +26,8 @@ class EfficientMask(nn.Module):
         features, regression, classification, anchors = self.model(imgs)
         (anchors, detections), detector_losses = self.rpn(imgs, annotations, regression, classification,
                                                           anchors, obj_list=obj_list)
+        # # true_labels = annotations[:, :, 4]
+        # pred_labels = [d.get_field("labels") for d in detections]
         targets = to_bbox_targets(annotations, masks, num, img_size=self.image_size)
 
         if self.training:

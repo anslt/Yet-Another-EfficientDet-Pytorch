@@ -27,10 +27,13 @@ def compute_on_dataset(model, data_loader, obj_list, device):
     for i, batch in tqdm(enumerate(data_loader)):
         images = batch["img"]
         image_ids = batch["id"]
+        # annot = batch["annot"]
+        # true_labels = annot[:, :, 4]
+        # true_boxes = annot[:, :, -1]
         images = images.to(device)
         with torch.no_grad():
             dummy = []
-            output = model(images, [], [], [], obj_list=obj_list)
+            output = model(images, dummy, dummy, dummy, obj_list=obj_list)
             output = [o.to(cpu_device) for o in output]
         results_dict.update(
             {img_id: result for img_id, result in zip(image_ids, output)}
