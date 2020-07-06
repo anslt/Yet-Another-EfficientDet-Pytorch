@@ -27,7 +27,7 @@ def compute_on_dataset(model, data_loader, obj_list, device):
     for i, batch in tqdm(enumerate(data_loader)):
         images = batch["img"]
         image_ids = batch["id"]
-        # annot = batch["annot"]
+        annot = batch["annot"]
         # true_labels = annot[:, :, 4]
         # true_boxes = annot[:, :, -1]
         images = images.to(device)

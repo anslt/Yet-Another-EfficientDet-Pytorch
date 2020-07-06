@@ -99,7 +99,6 @@ class CocoDataset(Dataset):
         # transform from [x, y, w, h] to [x1, y1, x2, y2]
         annotations[:, 2] = annotations[:, 0] + annotations[:, 2]
         annotations[:, 3] = annotations[:, 1] + annotations[:, 3]
-        
         return annotations, masks
 
 
@@ -166,16 +165,18 @@ class Resizer(object):
         if masks.size[0] != new_image.shape[0] or masks.size[1] != new_image.shape[1]:
             print("mask:", masks.size)
             print("image:", image.shape[:2])
-
+        # resize_result = {'img': torch.from_numpy(new_image).to(torch.float32), 'annot': torch.from_numpy(annots),
+        #         'mask': masks, 'scale': scale}
         return {'img': torch.from_numpy(new_image).to(torch.float32), 'annot': torch.from_numpy(annots),
                 'mask': masks, 'scale': scale}
 
 
 class Augmenter(object):
     """Convert ndarrays in sample to Tensors."""
-
-    def __call__(self, sample, flip_x=0.5):
+    # def __call__(self, sample, flip_x=0.5):
+    def __call__(self, sample, flip_x=1):
         if np.random.rand() < flip_x:
+            print("X flip augmentation is applied")
             image, annots, masks = sample['img'], sample['annot'], sample['mask']
             image = image[:, ::-1, :]
 
@@ -185,7 +186,7 @@ class Augmenter(object):
                 sample = {'img': image, 'annot': annots, 'mask': masks}
                 return sample
 
-
+            #x_flip augmenter
             x1 = annots[:, 0].copy()
             x2 = annots[:, 2].copy()
 
@@ -194,10 +195,11 @@ class Augmenter(object):
             annots[:, 0] = cols - x2
             annots[:, 2] = cols - x_tmp
 
-            masks.polygons = masks.transpose(0)
+            # masks.polygons = masks.transpose(0)
+            for i, polygon in enumerate(masks.polygons):
+                masks.polygons[i] = polygon.transpose(0)
 
             sample = {'img': image, 'annot': annots, 'mask': masks}
-
         return sample
 
 
