@@ -84,6 +84,9 @@ def main():
     # -----------------------
     model = EfficientMask(cfg, debug=False, compound_coef=compound_coef, num_classes=len(obj_list))
     model.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
+
+    if use_cuda:
+        model.cuda(gpu)
     # -----------------------
 
     iou_types = ("bbox",)
