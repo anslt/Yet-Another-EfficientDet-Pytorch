@@ -44,6 +44,8 @@ def get_args():
     parser.add_argument('--head_only', type=boolean_string, default=False,
                         help='whether finetunes only the regressor and the classifier, '
                              'useful in early stage convergence or small/easy dataset')
+    parser.add_argument('--mask_only', type=boolean_string, default=False,
+                        help='whether trains only the mask')
     parser.add_argument('-lb', '--load_backbone_only', type=boolean_string, default=False,
                         help='whether load the regressor and the classifier, ')
     parser.add_argument('--lr', type=float, default=1e-4)
@@ -164,6 +166,17 @@ def train(opt):
         def freeze_backbone(m):
             classname = m.__class__.__name__
             for ntl in ['EfficientNet', 'BiFPN']:
+                if ntl in classname:
+                    for param in m.parameters():
+                        param.requires_grad = False
+        model.apply(freeze_backbone)
+        print('[Info] freezed backbone')
+
+    if opt.mask_only:
+        def freeze_backbone(m):
+            classname = m.__class__.__name__
+            print(classname)
+            for ntl in ['EfficientNet', 'BiFPN', "Regressor", "Classifier"]:
                 if ntl in classname:
                     for param in m.parameters():
                         param.requires_grad = False

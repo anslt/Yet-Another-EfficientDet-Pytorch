@@ -66,19 +66,20 @@ class COCODemo(object):
         Creates a basic transformation that was used to train the models
         """
         # TODO: change build transform
-        cfg = self.cfg
+        # cfg = self.cfg
 
         # we are loading images with OpenCV, so we don't need to convert them
         # to BGR, they are already! So all we need to do is to normalize
         # by 255 if we want to convert to BGR255 format, or flip the channels
         # if we want it to be in RGB in [0-1] range.
-        if cfg.INPUT.TO_BGR255:
-            to_bgr_transform = T.Lambda(lambda x: x * 255)
-        else:
-            to_bgr_transform = T.Lambda(lambda x: x[[2, 1, 0]])
+        # if cfg.INPUT.TO_BGR255:
+        #     to_bgr_transform = T.Lambda(lambda x: x * 255)
+        # else:
+        #     to_bgr_transform = T.Lambda(lambda x: x[[2, 1, 0]])
 
+        to_bgr_transform = T.Lambda(lambda x: x[[2, 1, 0]])
         normalize_transform = T.Normalize(
-            mean=cfg.INPUT.PIXEL_MEAN, std=cfg.INPUT.PIXEL_STD
+            mean=self.params.mean, std=self.params.std
         )
 
         transform = T.Compose(
@@ -90,8 +91,6 @@ class COCODemo(object):
                 normalize_transform,
             ]
         )
-        # transform = transforms.Compose([Normalizer(mean=self.params.mean, std=self.params.std),
-        #                                 Resizer(input_sizes[compound_coef])])
 
         return transform
 
