@@ -24,8 +24,15 @@ def convert_to_coco_category():
     matches = {}
     for idx, name in enumerate(model_classes):
         if name == '':
+            matches.update({idx: -1})
             continue
         coco_idx = coco_classes.index(name) + 1
         matches.update({idx: coco_idx})
 
     return matches
+
+
+if __name__ == "__main__":
+    ids = convert_to_coco_category()
+    print(ids)
+    print(len(ids))

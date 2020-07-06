@@ -5,7 +5,7 @@ import tempfile
 import time
 import os
 from collections import OrderedDict
-
+import numpy as np
 import torch
 
 from tqdm import tqdm
@@ -35,6 +35,27 @@ def compute_on_dataset(model, data_loader, obj_list, device):
         results_dict.update(
             {img_id: result for img_id, result in zip(image_ids, output)}
         )
+        # FOR DUBUGGING
+        # predictions = results_dict
+        # dataset = data_loader.dataset
+        # for original_id, prediction in predictions.items():
+        #     if len(prediction) == 0:
+        #         continue
+        #
+        #     # TODO replace with get_img_info?
+        #     image_width = dataset.coco.imgs[original_id]["width"]
+        #     image_height = dataset.coco.imgs[original_id]["height"]
+        #     prediction = prediction.resize((image_width, image_height))
+        #     prediction = prediction.convert("xywh")
+        #
+        #     boxes = prediction.bbox.tolist()
+        #     scores = prediction.get_field("scores").tolist()
+        #     labels = prediction.get_field("labels").tolist()
+        #
+        #     coco_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
+        #     keep = np.where(np.array(coco_labels) > 0)[0]
+        #     mapped_labels = [coco_labels[i] for i in keep]
+        #     scores = [scores[i] for i in keep]
     return results_dict
 
 
@@ -55,7 +76,10 @@ def prepare_for_coco_detection(predictions, dataset):
         scores = prediction.get_field("scores").tolist()
         labels = prediction.get_field("labels").tolist()
 
-        mapped_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
+        coco_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
+        keep = np.where(np.array(coco_labels) > 0)[0]
+        mapped_labels = [coco_labels[i] for i in keep]
+        scores = [scores[i] for i in keep]
 
         coco_results.extend(
             [
@@ -107,7 +131,10 @@ def prepare_for_coco_segmentation(predictions, dataset):
         for rle in rles:
             rle["counts"] = rle["counts"].decode("utf-8")
 
-        mapped_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
+        coco_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
+        keep = np.where(np.array(coco_labels) > 0)[0]
+        mapped_labels = [coco_labels[i] for i in keep]
+        scores = [scores[i] for i in keep]
 
         coco_results.extend(
             [
