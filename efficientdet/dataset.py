@@ -175,7 +175,6 @@ class Augmenter(object):
     """Convert ndarrays in sample to Tensors."""
     def __call__(self, sample, flip_x=0.5):
         if np.random.rand() < flip_x:
-            print("X flip augmentation is applied")
             image, annots, masks = sample['img'], sample['annot'], sample['mask']
             image = image[:, ::-1, :]
 
