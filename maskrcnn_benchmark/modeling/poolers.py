@@ -117,7 +117,8 @@ class Pooler(nn.Module):
         )
         for level, (per_level_feature, pooler) in enumerate(zip(x, self.poolers)):
             idx_in_level = torch.nonzero(levels == level).squeeze(1)
-            rois_per_level = rois[idx_in_level]
+            print(rois_per_level)
+            rois_per_level = rois[idx_in_level].to(device) # TODO: must be cuda
             result[idx_in_level] = pooler(per_level_feature, rois_per_level)
 
         return result
