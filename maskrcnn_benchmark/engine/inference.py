@@ -35,7 +35,7 @@ def compute_on_dataset(model, data_loader, obj_list, device):
         results_dict.update(
             {img_id: result for img_id, result in zip(image_ids, output)}
         )
-        # FOR DUBUGGING
+        # # FOR DUBUGGING
         # predictions = results_dict
         # dataset = data_loader.dataset
         # for original_id, prediction in predictions.items():
@@ -56,6 +56,7 @@ def compute_on_dataset(model, data_loader, obj_list, device):
         #     keep = np.where(np.array(coco_labels) > 0)[0]
         #     mapped_labels = [coco_labels[i] for i in keep]
         #     scores = [scores[i] for i in keep]
+        #     boxes = [boxes[i] for i in keep]
     return results_dict
 
 
@@ -80,6 +81,7 @@ def prepare_for_coco_detection(predictions, dataset):
         keep = np.where(np.array(coco_labels) > 0)[0]
         mapped_labels = [coco_labels[i] for i in keep]
         scores = [scores[i] for i in keep]
+        boxes = [boxes[i] for i in keep]
 
         coco_results.extend(
             [
@@ -135,6 +137,7 @@ def prepare_for_coco_segmentation(predictions, dataset):
         keep = np.where(np.array(coco_labels) > 0)[0]
         mapped_labels = [coco_labels[i] for i in keep]
         scores = [scores[i] for i in keep]
+        rles = [rles[i] for i in keep]
 
         coco_results.extend(
             [
