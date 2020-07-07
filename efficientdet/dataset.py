@@ -127,7 +127,7 @@ def collater(data):
         annot_padded = torch.ones((len(annots), 1, 5)) * -1
 
     imgs = imgs.permute(0, 3, 1, 2)
-
+    # out_sample = {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": mask, "num": num_annots, "id": id}
     return {'img': imgs, 'annot': annot_padded, 'scale': scales, "mask": mask, "num": num_annots, "id": id}
 
 

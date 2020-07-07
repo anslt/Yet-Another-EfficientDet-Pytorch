@@ -56,6 +56,7 @@ class MaskRCNNLossComputation(object):
 
     def match_targets_to_proposals(self, proposal, target):
         match_quality_matrix = boxlist_iou(target, proposal)
+        # TODO: actually select the wrong match, maybe lower the threshold?
         matched_idxs = self.proposal_matcher(match_quality_matrix)
         # Mask RCNN needs "labels" and "masks "fields for creating the targets
         target = target.copy_with_fields(["labels", "masks"])
@@ -92,6 +93,7 @@ class MaskRCNNLossComputation(object):
 
             positive_proposals = proposals_per_image[positive_inds]
 
+            # TODO: mask between 0 and 1 after this
             masks_per_image = project_masks_on_boxes(
                 segmentation_masks, positive_proposals, self.discretization_size
             )

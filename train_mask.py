@@ -321,7 +321,7 @@ def train(opt):
                         if params.num_gpus == 1:
                             imgs = imgs.cuda()
                             annot = annot.cuda()
-                            mask = mask.cuda()
+                            mask = [k.to() for k in mask]
 
                         loss_dict = model(imgs, annot, mask, obj_list=params.obj_list)
                         cls_loss = loss_dict["loss_retina_cls"].mean()

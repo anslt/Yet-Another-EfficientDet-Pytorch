@@ -80,17 +80,18 @@ def prepare_for_coco_detection(predictions, dataset):
         scores = prediction.get_field("scores").tolist()
         labels = prediction.get_field("labels").tolist()
 
-        coco_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
-        keep = np.where(np.array(coco_labels) > 0)[0]
-        mapped_labels = [coco_labels[i] for i in keep]
-        scores = [scores[i] for i in keep]
-        boxes = [boxes[i] for i in keep]
+        mapped_labels = labels
+        # coco_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
+        # keep = np.where(np.array(coco_labels) > 0)[0]
+        # mapped_labels = [coco_labels[i] for i in keep]
+        # scores = [scores[i] for i in keep]
+        # boxes = [boxes[i] for i in keep]
 
         coco_results.extend(
             [
                 {
                     "image_id": original_id,
-                    "category_id": mapped_labels[k],
+                    "category_id": mapped_labels[k] + 1,
                     "bbox": box,
                     "score": scores[k],
                 }
@@ -136,17 +137,18 @@ def prepare_for_coco_segmentation(predictions, dataset):
         for rle in rles:
             rle["counts"] = rle["counts"].decode("utf-8")
 
-        coco_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
-        keep = np.where(np.array(coco_labels) > 0)[0]
-        mapped_labels = [coco_labels[i] for i in keep]
-        scores = [scores[i] for i in keep]
-        rles = [rles[i] for i in keep]
+        mapped_labels = labels
+        # coco_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
+        # keep = np.where(np.array(coco_labels) > 0)[0]
+        # mapped_labels = [coco_labels[i] for i in keep]
+        # scores = [scores[i] for i in keep]
+        # rles = [rles[i] for i in keep]
 
         coco_results.extend(
             [
                 {
                     "image_id": original_id,
-                    "category_id": mapped_labels[k],
+                    "category_id": mapped_labels[k] + 1,
                     "segmentation": rle,
                     "score": scores[k],
                 }
