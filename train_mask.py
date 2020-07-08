@@ -83,7 +83,7 @@ def train(opt):
     params = Params(f'projects/{opt.project}.yml')
 
     cfg.merge_from_file(opt.config_file)
-    cfg.MODEL.MASK_ON = True
+    # cfg.MODEL.MASK_ON = True
     # cfg.RETINANET.NUM_CLASSES = len(params.obj_list)
     # cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(params.obj_list)
     cfg.freeze()
