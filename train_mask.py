@@ -84,8 +84,8 @@ def train(opt):
 
     cfg.merge_from_file(opt.config_file)
     # cfg.MODEL.MASK_ON = True
-    # cfg.RETINANET.NUM_CLASSES = len(params.obj_list)
-    # cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(params.obj_list)
+    cfg.RETINANET.NUM_CLASSES = len(params.obj_list) + 1
+    cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(params.obj_list) + 1
     cfg.freeze()
 
     if params.num_gpus == 0:
