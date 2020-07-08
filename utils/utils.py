@@ -12,6 +12,7 @@ from torchvision.ops.boxes import batched_nms
 from typing import Union
 import uuid
 
+from utils.coco_category import convert_to_coco_category
 from utils.sync_batchnorm import SynchronizedBatchNorm2d
 from maskrcnn_benchmark.structures.bounding_box import BoxList
 
@@ -326,6 +327,17 @@ def to_bbox_detections(detections, img_size=512, fpn_post_nms_top_n=100):
 
             labels = detection['class_ids']
             scores = detection['scores']
+
+            # TODO: convert labels for 0-90 to 0-80
+            # and remove "-1" labels
+            #----------------------------------------
+            label_dict = convert_to_coco_category()
+            coco_labels = [label_dict[i] for i in labels]
+            keep = np.where(np.array(labels) >= 0)[0]
+            labels = [coco_labels[i] for i in keep]
+            scores = [scores[i] for i in keep]
+            rois = [rois[i] for i in keep]
+            #----------------------------------------
 
             boxlist = BoxList(torch.Tensor(rois).to(device), (img_size, img_size))
             boxlist.add_field("labels", torch.Tensor(labels).type(torch.LongTensor).to(device))

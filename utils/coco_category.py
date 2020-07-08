@@ -26,7 +26,7 @@ def convert_to_coco_category():
         if name == '':
             matches.update({idx: -1})
             continue
-        coco_idx = coco_classes.index(name) + 1
+        coco_idx = coco_classes.index(name)
         matches.update({idx: coco_idx})
 
     return matches
