@@ -62,9 +62,9 @@ def main():
     input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536]
 
     cfg.merge_from_file(args.config_file)
-    cfg.MODEL.MASK_ON = True
-    cfg.RETINANET.NUM_CLASSES = len(obj_list)
-    cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(obj_list)
+    # cfg.MODEL.MASK_ON = True
+    cfg.RETINANET.NUM_CLASSES = len(obj_list) + 1
+    cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(obj_list) + 1
     cfg.freeze()
 
     if use_cuda:

@@ -49,8 +49,8 @@ class EfficientMask(nn.Module):
                             proposals.append(merge_list[0])
                         else:
                             proposals.append(cat_boxlist(merge_list))
-                    print(targets[0].get_field("labels").max())
-                    print(proposals[0].get_field("labels").max())
+                    # print(targets[0].get_field("labels").max())
+                    # print(proposals[0].get_field("labels").max())
                     x, result, mask_losses = self.mask(features, proposals, targets)
 
                 losses.update(mask_losses)

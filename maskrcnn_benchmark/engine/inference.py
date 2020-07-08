@@ -27,9 +27,8 @@ def compute_on_dataset(model, data_loader, obj_list, device):
     for i, batch in tqdm(enumerate(data_loader)):
         images = batch["img"]
         image_ids = batch["id"]
-        annot = batch["annot"]
-        # true_labels = annot[:, :, 4]
-        # true_boxes = annot[:, :, -1]
+        # annot = batch["annot"]
+        # all_ids = data_loader.dataset.coco.getCatIds()
         images = images.to(device)
         with torch.no_grad():
             dummy = []
