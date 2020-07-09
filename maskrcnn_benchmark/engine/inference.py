@@ -27,7 +27,7 @@ def compute_on_dataset(model, data_loader, obj_list, device):
     for i, batch in tqdm(enumerate(data_loader)):
         images = batch["img"]
         image_ids = batch["id"]
-        annot = batch["annot"]
+        # annot = batch["annot"]
         # all_ids = data_loader.dataset.coco.getCatIds()
         images = images.to(device)
         with torch.no_grad():
@@ -293,8 +293,12 @@ def evaluate_predictions_on_coco(
         json.dump(coco_results, f)
 
     from pycocotools.cocoeval import COCOeval
-
     coco_dt = coco_gt.loadRes(str(json_result_file))
+    print("------------------------coco_gt--------------------")
+    print(coco_gt)
+    print("----------------------coco_dt----------------------")
+    print(coco_dt)
+    print("--------------------------------------------")
     # coco_dt = coco_gt.loadRes(coco_results)
     coco_eval = COCOeval(coco_gt, coco_dt, iou_type)
     coco_eval.evaluate()
@@ -455,6 +459,9 @@ def inference(
         logger.info("Preparing segm results")
         coco_results["segm"] = prepare_for_coco_segmentation(predictions, dataset)
 
+    print("-------------------------coco results-------------------")
+    print(coco_results)
+    print("--------------------------------------------")
     results = COCOResults(*iou_types)
     logger.info("Evaluating predictions")
     for iou_type in iou_types:
