@@ -294,11 +294,11 @@ def evaluate_predictions_on_coco(
 
     from pycocotools.cocoeval import COCOeval
     coco_dt = coco_gt.loadRes(str(json_result_file))
-    print("------------------------coco_gt--------------------")
-    print(coco_gt)
-    print("----------------------coco_dt----------------------")
-    print(coco_dt)
-    print("--------------------------------------------")
+    # print("------------------------coco_gt--------------------")
+    # print(coco_gt)
+    # print("----------------------coco_dt----------------------")
+    # print(coco_dt)
+    # print("--------------------------------------------")
     # coco_dt = coco_gt.loadRes(coco_results)
     coco_eval = COCOeval(coco_gt, coco_dt, iou_type)
     coco_eval.evaluate()
@@ -459,9 +459,9 @@ def inference(
         logger.info("Preparing segm results")
         coco_results["segm"] = prepare_for_coco_segmentation(predictions, dataset)
 
-    print("-------------------------coco results-------------------")
-    print(coco_results)
-    print("--------------------------------------------")
+    # print("-------------------------coco results-------------------")
+    # print(coco_results["bbox"][0])
+    # print("--------------------------------------------")
     results = COCOResults(*iou_types)
     logger.info("Evaluating predictions")
     for iou_type in iou_types:
