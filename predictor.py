@@ -34,10 +34,12 @@ class COCODemo(object):
             masks_per_dim=2,
             min_image_size=224,
             compound_coef=0,
-            project_name="coco"
+            project_path="projects/coco.yml"
     ):
         self.cfg = cfg.clone()
-        self.params = yaml.safe_load(open(f'projects/{project_name}.yml'))
+        # self.params = yaml.safe_load(open(f'projects/{project_name}.yml'))
+        self.params = yaml.safe_load(open(f'{project_path}'))
+        print(self.params.keys())
 
         self.model = EfficientMask(cfg, debug=False, compound_coef=compound_coef, num_classes=len(self.CATEGORIES))
 
