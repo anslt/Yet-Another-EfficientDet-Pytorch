@@ -369,7 +369,7 @@ def to_bbox_targets(annotations, masks, nums, img_size=512):
 
     targets = []
     for annot, mask, num in zip(annotations, masks, nums):
-        bboxes = annot[:num, :4]
+        bboxes = annot[:num, :4] # TODO: Why use num here?
         labels = annot[:num, -1]
 
         boxlist = BoxList(bboxes.to(device), (img_size, img_size))

@@ -91,5 +91,6 @@ class EfficientDetBackbone(nn.Module):
 
 
 def build_model(num_classes, compound_coef):
+    print('Building backbone with ' + str(num_classes) + 'number of classes')
     model = EfficientDetBackbone(num_classes=num_classes, compound_coef=compound_coef)
     return model

@@ -17,7 +17,6 @@ from backbone import EfficientDetBackbone
 from tensorboardX import SummaryWriter
 import numpy as np
 from tqdm.autonotebook import tqdm
-from efficientdet.model import Regressor, Classifier
 
 from efficientdet.loss import FocalLoss
 from utils.sync_batchnorm import patch_replication_callback
@@ -41,8 +40,6 @@ def get_args():
     parser.add_argument('--head_only', type=boolean_string, default=False,
                         help='whether finetunes only the regressor and the classifier, '
                              'useful in early stage convergence or small/easy dataset')
-    parser.add_argument('-lb','--load_backbone_only', type=boolean_string, default=False,
-                        help='whether load the regressor and the classifier, ')
     parser.add_argument('--lr', type=float, default=1e-4)
     parser.add_argument('--optim', type=str, default='adamw', help='select optimizer for training, '
                                                                    'suggest using \'admaw\' until the'
@@ -59,8 +56,9 @@ def get_args():
     parser.add_argument('-w', '--load_weights', type=str, default=None,
                         help='whether to load weights from a checkpoint, set None to initialize, set \'last\' to load last checkpoint')
     parser.add_argument('--saved_path', type=str, default='logs/')
-    parser.add_argument('--debug', type=boolean_string, default=False, help='whether visualize the predicted boxes of training, '
-                                                                  'the output images will be in test/')
+    parser.add_argument('--debug', type=boolean_string, default=False,
+                        help='whether visualize the predicted boxes of training, '
+                             'the output images will be in test/')
 
     args = parser.parse_args()
     return args
@@ -131,9 +129,7 @@ def train(opt):
 
     model = EfficientDetBackbone(num_classes=len(params.obj_list), compound_coef=opt.compound_coef,
                                  ratios=eval(params.anchors_ratios), scales=eval(params.anchors_scales))
-    
-    
-             
+
     # load last weights
     if opt.load_weights is not None:
         if opt.load_weights.endswith('.pth'):
@@ -147,8 +143,6 @@ def train(opt):
 
         try:
             ret = model.load_state_dict(torch.load(weights_path), strict=False)
-            if opt.load_backbone_only:
-                model.reload_cls_reg()
         except RuntimeError as e:
             print(f'[Warning] Ignoring {e}')
             print(
@@ -315,7 +309,7 @@ def train(opt):
                     save_checkpoint(model, f'efficientdet-d{opt.compound_coef}_{epoch}_{step}.pth')
 
                 model.train()
-                           
+
                 # Early stopping
                 if epoch - best_epoch > opt.es_patience > 0:
                     print('[Info] Stop training at epoch {}. The lowest loss achieved is {}'.format(epoch, best_loss))
