@@ -22,9 +22,12 @@ from pycocotools.cocoeval import COCOeval
 
 from backbone import EfficientDetBackbone
 from efficientdet.utils import BBoxTransform, ClipBoxes
+from mask import EfficientMask
 from utils.utils import preprocess, invert_affine, postprocess
+from maskrcnn_benchmark.config import cfg
 
 ap = argparse.ArgumentParser()
+ap.add_argument("-cfg", "--config-file", default="", metavar="FILE", help="path to config file", type=str, )
 ap.add_argument('-p', '--project', type=str, default='coco', help='project file that contains parameters')
 ap.add_argument('-c', '--compound_coef', type=int, default=0, help='coefficients of efficientdet')
 ap.add_argument('-w', '--weights', type=str, default=None, help='/path/to/weights')
@@ -43,7 +46,7 @@ use_float16 = args.float16
 override_prev_results = args.override
 project_name = args.project
 weights_path = f'weights/efficientdet-d{compound_coef}.pth' if args.weights is None else args.weights
-
+cpu_device = torch.device("cpu")
 print(f'running coco-style evaluation on project {project_name}, weights {weights_path}...')
 
 params = yaml.safe_load(open(f'projects/{project_name}.yml'))
@@ -51,12 +54,14 @@ obj_list = params['obj_list']
 
 input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536]
 
+cfg.merge_from_file(args.config_file)
+# cfg.MODEL.MASK_ON = True
+cfg.RETINANET.NUM_CLASSES = len(obj_list) + 1
+cfg.MODEL.ROI_BOX_HEAD.NUM_CLASSES = len(obj_list) + 1
+cfg.freeze()
 
 def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
     results = []
-
-    regressBoxes = BBoxTransform()
-    clipBoxes = ClipBoxes()
 
     for image_id in tqdm(image_ids):
         image_info = coco.loadImgs(image_id)[0]
@@ -75,13 +80,18 @@ def evaluate_coco(img_path, set_name, image_ids, coco, model, threshold=0.05):
             x = x.float()
 
         x = x.unsqueeze(0).permute(0, 3, 1, 2)
-        features, regression, classification, anchors = model(x)
-
-        preds = postprocess(x,
-                            anchors, regression, classification,
-                            regressBoxes, clipBoxes,
-                            threshold, nms_threshold)
-        
+        # TODO: replace predictions and convert to the right format
+        # ---------------------------------------
+        dummy = []
+        output = model(x, dummy, dummy, dummy, obj_list=obj_list)
+        output = output[0].to(cpu_device)
+        preds =[{
+            'image_id': image_id,
+            'class_ids': output.get_field("labels").detach().numpy(),
+            'scores': output.get_field("scores").detach().numpy(),
+            'rois': output.bbox.detach().numpy(),
+        }]
+        # ---------------------------------------
         if not preds:
             continue
 
@@ -145,8 +155,7 @@ if __name__ == '__main__':
     image_ids = coco_gt.getImgIds()[:MAX_IMAGES]
     
     if override_prev_results or not os.path.exists(f'{SET_NAME}_bbox_results.json'):
-        model = EfficientDetBackbone(compound_coef=compound_coef, num_classes=len(obj_list),
-                                     ratios=eval(params['anchors_ratios']), scales=eval(params['anchors_scales']))
+        model = EfficientMask(cfg, debug=False, compound_coef=compound_coef, num_classes=len(obj_list))
         model.load_state_dict(torch.load(weights_path, map_location=torch.device('cpu')))
         model.requires_grad_(False)
         model.eval()
