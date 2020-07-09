@@ -27,7 +27,7 @@ def compute_on_dataset(model, data_loader, obj_list, device):
     for i, batch in tqdm(enumerate(data_loader)):
         images = batch["img"]
         image_ids = batch["id"]
-        # annot = batch["annot"]
+        annot = batch["annot"]
         # all_ids = data_loader.dataset.coco.getCatIds()
         images = images.to(device)
         with torch.no_grad():
@@ -38,8 +38,15 @@ def compute_on_dataset(model, data_loader, obj_list, device):
             {img_id: result for img_id, result in zip(image_ids, output)}
         )
         # # FOR DUBUGGING
+        # import pycocotools.mask as mask_util
+        # import numpy as np
         # predictions = results_dict
         # dataset = data_loader.dataset
+        # masker = Masker(threshold=0.5, padding=1)
+        # # assert isinstance(dataset, COCODataset)
+        # coco_results = []
+        # # for image_id, prediction in tqdm(enumerate(predictions)):
+        # # original_id = dataset.id_to_img_map[image_id]
         # for original_id, prediction in predictions.items():
         #     if len(prediction) == 0:
         #         continue
@@ -48,17 +55,20 @@ def compute_on_dataset(model, data_loader, obj_list, device):
         #     image_width = dataset.coco.imgs[original_id]["width"]
         #     image_height = dataset.coco.imgs[original_id]["height"]
         #     prediction = prediction.resize((image_width, image_height))
-        #     prediction = prediction.convert("xywh")
-        #
-        #     boxes = prediction.bbox.tolist()
+        #     masks = prediction.get_field("mask")
+        #     # t = time.time()
+        #     masks = masker(masks, prediction)
         #     scores = prediction.get_field("scores").tolist()
         #     labels = prediction.get_field("labels").tolist()
         #
-        #     coco_labels = [dataset.contiguous_category_id_to_json_id[i] for i in labels]
-        #     keep = np.where(np.array(coco_labels) > 0)[0]
-        #     mapped_labels = [coco_labels[i] for i in keep]
-        #     scores = [scores[i] for i in keep]
-        #     boxes = [boxes[i] for i in keep]
+        #     # rles = prediction.get_field('mask')
+        #
+        #     rles = [
+        #         mask_util.encode(np.array(mask[0, :, :, np.newaxis], order="F"))[0]
+        #         for mask in masks
+        #     ]
+        #     for rle in rles:
+        #         rle["counts"] = rle["counts"].decode("utf-8")
     return results_dict
 
 
@@ -90,7 +100,7 @@ def prepare_for_coco_detection(predictions, dataset):
             [
                 {
                     "image_id": original_id,
-                    "category_id": mapped_labels[k] + 1,
+                    "category_id": mapped_labels[k],
                     "bbox": box,
                     "score": scores[k],
                 }
@@ -147,7 +157,7 @@ def prepare_for_coco_segmentation(predictions, dataset):
             [
                 {
                     "image_id": original_id,
-                    "category_id": mapped_labels[k] + 1,
+                    "category_id": mapped_labels[k],
                     "segmentation": rle,
                     "score": scores[k],
                 }
