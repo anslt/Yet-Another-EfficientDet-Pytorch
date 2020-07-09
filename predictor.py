@@ -79,7 +79,7 @@ class COCODemo(object):
 
         to_bgr_transform = T.Lambda(lambda x: x[[2, 1, 0]])
         normalize_transform = T.Normalize(
-            mean=self.params.mean, std=self.params.std
+            mean=self.params["mean"], std=self.params["std"]
         )
 
         transform = T.Compose(
