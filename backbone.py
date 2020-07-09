@@ -20,8 +20,8 @@ class EfficientDetBackbone(nn.Module):
         self.input_sizes = [512, 640, 768, 896, 1024, 1280, 1280, 1536]
         self.box_class_repeats = [3, 3, 3, 4, 4, 4, 5, 5]
         self.anchor_scale = [4., 4., 4., 4., 4., 4., 4., 5.]
-        self.aspect_ratios = [(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)]
-        self.num_scales = len([2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
+        self.aspect_ratios = kwargs.get('ratios', [(1.0, 1.0), (1.4, 0.7), (0.7, 1.4)])
+        self.num_scales = len(kwargs.get('scales', [2 ** 0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)]))
         conv_channel_coef = {
             # the channels of P3/P4/P5.
             0: [40, 112, 320],
@@ -53,14 +53,6 @@ class EfficientDetBackbone(nn.Module):
         self.anchors = Anchors(anchor_scale=self.anchor_scale[compound_coef], **kwargs)
 
         self.backbone_net = EfficientNet(self.backbone_compound_coef[compound_coef], load_weights)
-    
-    def reload_cls_reg(self):
-        num_anchors = len(self.aspect_ratios) * self.num_scales
-        self.regressor = Regressor(in_channels=self.fpn_num_filters[self.compound_coef], num_anchors=num_anchors,
-                                   num_layers=self.box_class_repeats[self.compound_coef])
-        self.classifier = Classifier(in_channels=self.fpn_num_filters[self.compound_coef], num_anchors=num_anchors,
-                                     num_classes=self.num_classes,
-                                     num_layers=self.box_class_repeats[self.compound_coef])
 
     def freeze_bn(self):
         for m in self.modules():
@@ -91,6 +83,5 @@ class EfficientDetBackbone(nn.Module):
 
 
 def build_model(num_classes, compound_coef):
-    print('Building backbone with ' + str(num_classes) + 'number of classes')
     model = EfficientDetBackbone(num_classes=num_classes, compound_coef=compound_coef)
     return model

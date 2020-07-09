@@ -13,8 +13,8 @@ class EfficientMask(nn.Module):
         self.cfg = cfg.clone()
         self.debug = debug
 
-        # self.model = build_model(num_classes=num_classes, compound_coef=compound_coef)
-        self.model = build_model(num_classes, compound_coef)
+        self.model = build_model(num_classes=num_classes, compound_coef=compound_coef)
+        # self.model = build_model(num_classes, compound_coef)
         self.rpn = build_rpn(cfg)
         self.mask = None
         if self.cfg.MODEL.MASK_ON:

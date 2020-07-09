@@ -100,7 +100,7 @@ def prepare_for_coco_detection(predictions, dataset):
             [
                 {
                     "image_id": original_id,
-                    "category_id": mapped_labels[k],
+                    "category_id": mapped_labels[k] + 1,
                     "bbox": box,
                     "score": scores[k],
                 }
@@ -157,7 +157,7 @@ def prepare_for_coco_segmentation(predictions, dataset):
             [
                 {
                     "image_id": original_id,
-                    "category_id": mapped_labels[k],
+                    "category_id": mapped_labels[k] + 1,
                     "segmentation": rle,
                     "score": scores[k],
                 }
